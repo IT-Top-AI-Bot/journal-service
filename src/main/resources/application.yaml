@@ -30,14 +30,6 @@ spring:
       password: ${REDIS_PASSWORD:}
       timeout: 60000
 
-  ai:
-    openai:
-      base-url: "https://api.groq.com/openai"
-      api-key: ${GROK_API_KEY}
-      chat:
-        options:
-          model: "llama-3.3-70b-versatile"
-
 journal:
   api:
     base-url: "https://msapi.top-academy.ru/api/v2"
@@ -52,15 +44,6 @@ journal:
     refresh-interval: 14400000
     refresh-before-expiry: 300
     max-retry-attempts: 3
-
-  schedule-monitor:
-    enabled: ${JOURNAL_SCHEDULE_MONITOR_ENABLED:false}
-    cron: ${JOURNAL_SCHEDULE_MONITOR_CRON:0 */10 * * * *}
-    zone: ${JOURNAL_SCHEDULE_MONITOR_ZONE:Europe/Moscow}
-    username: ${JOURNAL_SCHEDULE_MONITOR_USERNAME:}
-    password: ${JOURNAL_SCHEDULE_MONITOR_PASSWORD:}
-    month-offset: ${JOURNAL_SCHEDULE_MONITOR_MONTH_OFFSET:-1}
-    months-to-check: ${JOURNAL_SCHEDULE_MONITOR_MONTHS_TO_CHECK:14}
 
 keycloak:
   realm: it-top-ai
