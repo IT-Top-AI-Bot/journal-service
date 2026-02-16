@@ -14,13 +14,14 @@ COPY gradle/wrapper/gradle-wrapper.properties gradle/wrapper/gradle-wrapper.prop
 COPY settings.gradle.kts settings.gradle.kts
 COPY build.gradle.kts build.gradle.kts
 
+ENV SPRING_PROFILES_ACTIVE=aot
+
 RUN --mount=type=cache,target=/root/.gradle \
     chmod +x gradlew && \
     ./gradlew --no-daemon -x test help
 
 COPY src/ src/
 
-ENV SPRING_PROFILES_ACTIVE=aot
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon clean nativeCompile -x test
 
