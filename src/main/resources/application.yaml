@@ -1,0 +1,83 @@
+spring:
+  application:
+    name: it-top-ai
+
+  threads:
+    virtual:
+      enabled: true
+
+  config:
+    import: optional:file:.env[.properties]
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000
+
+  ai:
+    openai:
+      base-url: "https://api.groq.com/openai"
+      api-key: ${GROK_API_KEY}
+      chat:
+        options:
+          model: "llama-3.3-70b-versatile"
+
+journal:
+  api:
+    base-url: "https://msapi.top-academy.ru/api/v2"
+    application-key: 6a56a5df2667e65aab73ce76d1dd737f7d1faef9c52e8b8c55ac75f565d8e8a6
+    user-agent: "itt-journal-service/1.0"
+    journal-url: "https://journal.top-academy.ru"
+    timeout:
+      connect: 10000
+      read: 15000
+
+  token:
+    refresh-interval: 14400000
+    refresh-before-expiry: 300
+    max-retry-attempts: 3
+
+  schedule-monitor:
+    enabled: ${JOURNAL_SCHEDULE_MONITOR_ENABLED:false}
+    cron: ${JOURNAL_SCHEDULE_MONITOR_CRON:0 */10 * * * *}
+    zone: ${JOURNAL_SCHEDULE_MONITOR_ZONE:Europe/Moscow}
+    username: ${JOURNAL_SCHEDULE_MONITOR_USERNAME:}
+    password: ${JOURNAL_SCHEDULE_MONITOR_PASSWORD:}
+    month-offset: ${JOURNAL_SCHEDULE_MONITOR_MONTH_OFFSET:-1}
+    months-to-check: ${JOURNAL_SCHEDULE_MONITOR_MONTHS_TO_CHECK:14}
+
+keycloak:
+  realm: it-top-ai
+  auth-server-url: ${KEYCLOAK_SERVER}
+  token-url: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
+  client:
+    id: ${KEYCLOAK_CLIENT_ID}
+    secret: ${KEYCLOAK_CLIENT_SECRET}
+
+crypto:
+  secret-key: ${ENCRYPTION_KEY:MySecretKey12345MySecretKey12345}
+
+logging:
+  level:
+    com.aquadev.ittopai: DEBUG
+    org.springframework.web: INFO
+    org.springframework.web.client: DEBUG
+
+server:
+  port: ${SERVER_PORT:8080}

@@ -1,0 +1,18 @@
+# Ignore everything by default
+*
+
+# Allow sources
+!**/src/**
+
+# Allow Gradle wrapper + build scripts
+!gradlew
+!gradle/**
+
+# Allow gradle build files anywhere
+!**/*.gradle
+!**/*.gradle.kts
+!**/gradle.properties
+!settings.gradle
+!settings.gradle.kts
+!build.gradle
+!build.gradle.kts

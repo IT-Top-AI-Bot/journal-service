@@ -1,0 +1,104 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1769454017475-1
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_journalcredential
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: journal_user_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: username
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: password
+                  type: VARCHAR(255)
+            tableName: journal_credential
+  - changeSet:
+      id: 1769454017475-2
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_users
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: telegram_id
+                  type: BIGINT
+              - column:
+                  name: journal_credential_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: created_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: updated_at
+                  type: DATETIME
+            tableName: users
+  - changeSet:
+      id: 1769454017475-3
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: journal_user_id
+            constraintName: uc_journalcredential_journaluserid
+            tableName: journal_credential
+  - changeSet:
+      id: 1769454017475-4
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: username
+            constraintName: uc_journalcredential_username
+            tableName: journal_credential
+  - changeSet:
+      id: 1769454017475-5
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: telegram_id
+            constraintName: uc_users_telegramid
+            tableName: users
+  - changeSet:
+      id: 1769454017475-6
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: journal_credential_id
+            baseTableName: users
+            constraintName: FK_USERS_ON_JOURNALCREDENTIAL
+            referencedColumnNames: id
+            referencedTableName: journal_credential
+

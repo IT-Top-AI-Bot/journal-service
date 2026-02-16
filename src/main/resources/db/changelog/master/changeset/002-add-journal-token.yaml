@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1770559714740-1
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_journal_token
+                  name: journal_user_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: access_token_enc
+                  type: VARCHAR(4096)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: refresh_token_enc
+                  type: VARCHAR(4096)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: access_expires_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: refresh_expires_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: reauth_required
+                  type: BOOLEAN
+              - column:
+                  constraints:
+                    nullable: false
+                  name: created_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: updated_at
+                  type: DATETIME
+            tableName: journal_token
+

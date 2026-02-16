@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+if [ -z "$KEYCLOAK_DB_USER" ] || [ -z "$KEYCLOAK_DB_PASSWORD" ] || [ -z "$KEYCLOAK_DB_NAME" ]; then
+    echo "ERROR: Missing environment variables!"
+    exit 1
+fi
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+DO
+\$\$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$KEYCLOAK_DB_USER') THEN
+      EXECUTE format('CREATE USER %I WITH PASSWORD %L', '$KEYCLOAK_DB_USER', '$KEYCLOAK_DB_PASSWORD');
+   END IF;
+END
+\$\$;
+
+CREATE DATABASE "$KEYCLOAK_DB_NAME"
+    WITH OWNER "$KEYCLOAK_DB_USER";
+
+GRANT ALL PRIVILEGES ON DATABASE "$KEYCLOAK_DB_NAME" TO "$KEYCLOAK_DB_USER";
+EOSQL

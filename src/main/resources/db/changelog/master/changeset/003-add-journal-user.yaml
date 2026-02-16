@@ -1,0 +1,165 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1770831476320-1
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_journal_group
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: journal_group_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(255)
+            tableName: journal_group
+  - changeSet:
+      id: 1770831476320-2
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_journal_user
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: journal_user_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: stream_id
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: stream_name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: full_name
+                  type: VARCHAR(255)
+              - column:
+                  name: photo_url
+                  type: VARCHAR(2048)
+              - column:
+                  name: birthday
+                  type: DATE
+              - column:
+                  name: last_date_visit
+                  type: DATETIME
+              - column:
+                  name: registration_date
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: gender
+                  type: BOOLEAN
+            tableName: journal_user
+  - changeSet:
+      id: 1770831476320-3
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_journal_user_journalgroups
+                  name: journal_user_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_journal_user_journalgroups
+                  name: journal_groups_id
+                  type: BIGINT
+            tableName: journal_user_journal_groups
+  - changeSet:
+      id: 1770831476320-4
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: journal_user_id
+                  type: BIGINT
+            tableName: users
+  - changeSet:
+      id: 1770831476320-5
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: journal_group_id
+            constraintName: uc_journal_group_journalgroupid
+            tableName: journal_group
+  - changeSet:
+      id: 1770831476320-6
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: journal_groups_id
+            constraintName: uc_journal_user_journal_groups_journalgroups
+            tableName: journal_user_journal_groups
+  - changeSet:
+      id: 1770831476320-7
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: journal_user_id
+            baseTableName: users
+            constraintName: FK_USERS_ON_JOURNALUSER
+            referencedColumnNames: id
+            referencedTableName: journal_user
+  - changeSet:
+      id: 1770831476320-8
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: journal_groups_id
+            baseTableName: journal_user_journal_groups
+            constraintName: fk_jouusejougro_on_journal_group
+            referencedColumnNames: id
+            referencedTableName: journal_group
+  - changeSet:
+      id: 1770831476320-9
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: journal_user_id
+            baseTableName: journal_user_journal_groups
+            constraintName: fk_jouusejougro_on_journal_user
+            referencedColumnNames: id
+            referencedTableName: journal_user
+
