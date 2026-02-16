@@ -28,9 +28,13 @@ jobs:
 
       - name: Build
         run: ./gradlew --no-daemon clean assemble
+        env:
+          SPRING_PROFILES_ACTIVE: aot
 
       - name: Run tests
         run: ./gradlew --no-daemon test
+        env:
+          SPRING_PROFILES_ACTIVE: aot
 
   docker:
     name: Build Docker image
