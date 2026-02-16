@@ -2,6 +2,7 @@ plugins {
     java
     id("org.sonarqube") version "7.2.2.6593"
     id("org.springframework.boot") version "4.0.2"
+    id("org.graalvm.buildtools.native") version "0.11.4"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
