@@ -20,9 +20,9 @@ RUN --mount=type=cache,target=/root/.gradle \
 
 COPY src/ src/
 
+ENV SPRING_PROFILES_ACTIVE=aot
 RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew --no-daemon clean nativeCompile -x test \
-      -Dorg.gradle.jvmargs="-Dspring.profiles.active=aot"
+    ./gradlew --no-daemon clean nativeCompile -x test
 
 RUN mkdir -p /out && \
     bin="$(find build/native/nativeCompile -maxdepth 1 -type f -executable | head -n 1)" && \
