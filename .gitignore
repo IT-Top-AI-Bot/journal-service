@@ -37,3 +37,6 @@ out/
 .vscode/
 
 .env
+/.aiassistant/rules/AGENTS.md
+/amplicode.xml
+/.ai/mcp/mcp.json
