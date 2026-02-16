@@ -12,7 +12,6 @@
 # IMPORTANT: allow directories (parents) explicitly
 !gradle/
 !gradle/wrapper/
-!gradle/**
 
 # Allow gradle build files
 !**/*.gradle
