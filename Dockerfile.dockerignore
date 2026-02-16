@@ -2,13 +2,19 @@
 *
 
 # Allow sources
-!**/src/**
+!src/
+!src/**
 
 # Allow Gradle wrapper + build scripts
 !gradlew
+!gradlew.bat
+
+# IMPORTANT: allow directories (parents) explicitly
+!gradle/
+!gradle/wrapper/
 !gradle/**
 
-# Allow gradle build files anywhere
+# Allow gradle build files
 !**/*.gradle
 !**/*.gradle.kts
 !**/gradle.properties

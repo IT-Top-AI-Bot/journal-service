@@ -8,7 +8,11 @@ WORKDIR /application
 
 RUN microdnf install -y findutils zip unzip git ca-certificates && microdnf clean all
 
-COPY gradlew settings.gradle* build.gradle* gradle/ ./
+COPY gradlew ./
+COPY gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.jar
+COPY gradle/wrapper/gradle-wrapper.properties gradle/wrapper/gradle-wrapper.properties
+COPY settings.gradle settings.gradle
+COPY build.gradle build.gradle
 
 RUN --mount=type=cache,target=/root/.gradle \
     chmod +x gradlew && \
