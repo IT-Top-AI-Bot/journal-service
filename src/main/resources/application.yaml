@@ -9,6 +9,18 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+  cloud:
+    aws:
+      credentials:
+        access-key: ${S3_ACCESS_KEY}
+        secret-key: ${S3_SECRET_KEY}
+      region:
+        static: ${S3_REGION}
+      s3:
+        enabled: true
+        endpoint: ${S3_ENDPOINT:}
+        path-style-access-enabled: true
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -45,13 +57,8 @@ journal:
     refresh-before-expiry: 300
     max-retry-attempts: 3
 
-keycloak:
-  realm: it-top-ai
-  auth-server-url: ${KEYCLOAK_SERVER}
-  token-url: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
-  client:
-    id: ${KEYCLOAK_CLIENT_ID}
-    secret: ${KEYCLOAK_CLIENT_SECRET}
+s3:
+  bucket-name: homeworks
 
 crypto:
   secret-key: ${ENCRYPTION_KEY:MySecretKey12345MySecretKey12345}
