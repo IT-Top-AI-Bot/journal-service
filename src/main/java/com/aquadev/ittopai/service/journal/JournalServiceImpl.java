@@ -1,57 +1,35 @@
 package com.aquadev.ittopai.service.journal;
 
-import com.aquadev.ittopai.dto.response.JournalCountHomeworkResponse;
-import com.aquadev.ittopai.dto.response.JournalHomeworkCounterType;
-import com.aquadev.ittopai.dto.response.JournalScheduleResponse;
-import com.aquadev.ittopai.dto.response.JournalUserResponse;
+import com.aquadev.ittopai.client.journal.JournalClient;
+import com.aquadev.ittopai.config.telegram.TelegramUserContext;
+import com.aquadev.ittopai.dto.response.JournalHomeworkResponse;
+import com.aquadev.ittopai.exception.domain.user.UserNotFoundException;
+import com.aquadev.ittopai.model.JournalGroup;
+import com.aquadev.ittopai.model.User;
+import com.aquadev.ittopai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class JournalServiceImpl implements JournalService {
 
-    private final RestClient restClient;
+    private final JournalClient journalClient;
+    private final UserRepository userRepository;
 
     @Override
-    public JournalUserResponse getCurrentUser() {
-        return restClient.get()
-                .uri("/settings/user-info")
-                .retrieve()
-                .body(JournalUserResponse.class);
-    }
+    public List<JournalHomeworkResponse> getHomeworksForUser(Integer page, Integer status, Integer type) {
+        Long telegramId = TelegramUserContext.get();
+        User user = userRepository.findByTelegramId(telegramId)
+                .orElseThrow(UserNotFoundException::new);
 
-    @Override
-    public List<JournalCountHomeworkResponse> getCountHomework() {
-        List<JournalCountHomeworkResponse> response = restClient.get()
-                .uri("/count/homework")
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                });
+        Long groupIdToUse = user.getJournalUser().getJournalGroups().stream()
+                .map(JournalGroup::getJournalGroupId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
 
-        if (response == null) {
-            return List.of();
-        }
-
-        return response.stream()
-                .filter(item -> item.counterTypeName() != JournalHomeworkCounterType.IGNORED)
-                .toList();
-    }
-
-    @Override
-    public List<JournalScheduleResponse> getScheduleByDate(LocalDate date) {
-        return restClient.get()
-                .uri(uri -> uri
-                        .path("/schedule/operations/get-month")
-                        .queryParam("date-filter", date)
-                        .build())
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                });
+        return journalClient.getHomeworks(page, status, type, groupIdToUse.intValue());
     }
 }

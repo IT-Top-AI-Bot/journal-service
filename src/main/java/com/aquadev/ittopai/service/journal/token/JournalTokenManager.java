@@ -1,12 +1,12 @@
 package com.aquadev.ittopai.service.journal.token;
 
+import com.aquadev.ittopai.client.journal.auth.JournalAuthClient;
 import com.aquadev.ittopai.config.journal.JournalTokenProperties;
 import com.aquadev.ittopai.dto.response.JournalTokenResponse;
 import com.aquadev.ittopai.model.JournalCredential;
 import com.aquadev.ittopai.model.JournalToken;
 import com.aquadev.ittopai.repository.JournalCredentialRepository;
 import com.aquadev.ittopai.repository.JournalTokenRepository;
-import com.aquadev.ittopai.service.journal.JournalAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class JournalTokenManager {
 
     private final JournalTokenRepository repo;
     private final JournalCredentialRepository credentialRepository;
-    private final JournalAuthService journalAuthService;
+    private final JournalAuthClient journalAuthClient;
     private final JournalTokenProperties tokenProperties;
     private final TokenCrypto crypto;
     private final StringRedisTemplate redis;
@@ -97,7 +97,7 @@ public class JournalTokenManager {
             String refresh = crypto.decrypt(t.getRefreshTokenEnc());
             JournalTokenResponse refreshed;
             try {
-                refreshed = journalAuthService.refreshToken(refresh);
+                refreshed = journalAuthClient.refreshToken(refresh);
             } catch (RuntimeException _) {
                 return reauthAndStore(journalUserId);
             }
@@ -165,7 +165,7 @@ public class JournalTokenManager {
 
         JournalTokenResponse token;
         try {
-            token = journalAuthService.login(credential.getUsername(), credential.getPassword());
+            token = journalAuthClient.login(credential.getUsername(), credential.getPassword());
         } catch (RuntimeException ex) {
             markReauthRequired(journalUserId);
             throw ex;

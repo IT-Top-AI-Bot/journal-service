@@ -1,0 +1,89 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1771358302293-1
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_journal_homework
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: id_spec
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: id_teach
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: id_group
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: fio_teach
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: theme
+                  type: VARCHAR(1000)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: completion_time
+                  type: DATE
+              - column:
+                  constraints:
+                    nullable: false
+                  name: creation_time
+                  type: DATE
+              - column:
+                  constraints:
+                    nullable: false
+                  name: overdue_time
+                  type: DATE
+              - column:
+                  name: filename
+                  type: VARCHAR(255)
+              - column:
+                  name: file_path
+                  type: VARCHAR(1000)
+              - column:
+                  name: comment
+                  type: VARCHAR(2000)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name_spec
+                  type: VARCHAR(1000)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: status
+                  type: VARCHAR(255)
+              - column:
+                  name: common_status
+                  type: INT
+              - column:
+                  name: homework_stud
+                  type: TEXT
+              - column:
+                  name: homework_comment
+                  type: TEXT
+              - column:
+                  name: cover_image
+                  type: VARCHAR(1000)
+            tableName: journal_homework
+

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record JournalCountHomeworkResponse(
         Integer counterTypeId,
-        JournalHomeworkCounterType counterTypeName,
+        JournalHomeworkStatus counterTypeName,
         Integer counter
 ) {
 
@@ -15,6 +15,6 @@ public record JournalCountHomeworkResponse(
             @JsonProperty("counterType") @JsonAlias("counter_type") Integer counterType,
             @JsonProperty("counter") Integer counter
     ) {
-        this(counterType, JournalHomeworkCounterType.fromId(counterType), counter);
+        this(counterType, JournalHomeworkStatus.fromId(counterType), counter);
     }
 }

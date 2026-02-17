@@ -1,7 +1,6 @@
-package com.aquadev.ittopai.service.journal;
+package com.aquadev.ittopai.service.journal.token;
 
 import com.aquadev.ittopai.repository.UserRepository;
-import com.aquadev.ittopai.service.journal.token.JournalRedisKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;

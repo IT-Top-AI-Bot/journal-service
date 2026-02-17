@@ -8,7 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Getter
-public enum JournalHomeworkCounterType {
+public enum JournalHomeworkStatus {
     EXPIRED(0, "Просрочено"),
     CHECKED(1, "Проверено"),
     NONE(2, "-"),
@@ -17,18 +17,18 @@ public enum JournalHomeworkCounterType {
     DELETED_BY_TEACHER(5, "ДЗ удалено преподавателем"),
     UNKNOWN(-1, "Неизвестно");
 
-    private static final Map<Integer, JournalHomeworkCounterType> BY_ID = Arrays.stream(values())
-            .collect(Collectors.toMap(JournalHomeworkCounterType::getId, Function.identity()));
+    private static final Map<Integer, JournalHomeworkStatus> BY_ID = Arrays.stream(values())
+            .collect(Collectors.toMap(JournalHomeworkStatus::getId, Function.identity()));
 
     private final int id;
     private final String displayName;
 
-    JournalHomeworkCounterType(int id, String displayName) {
+    JournalHomeworkStatus(int id, String displayName) {
         this.id = id;
         this.displayName = displayName;
     }
 
-    public static JournalHomeworkCounterType fromId(Integer id) {
+    public static JournalHomeworkStatus fromId(Integer id) {
         if (id == null) {
             return UNKNOWN;
         }

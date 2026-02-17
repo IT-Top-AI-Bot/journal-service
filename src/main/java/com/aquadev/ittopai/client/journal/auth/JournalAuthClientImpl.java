@@ -1,4 +1,4 @@
-package com.aquadev.ittopai.service.journal;
+package com.aquadev.ittopai.client.journal.auth;
 
 import com.aquadev.ittopai.config.journal.JournalApiProperties;
 import com.aquadev.ittopai.dto.request.JournalLoginRequest;
@@ -11,7 +11,7 @@ import org.springframework.web.client.RestClient;
 
 @Service
 @RequiredArgsConstructor
-public class JournalAuthServiceImpl implements JournalAuthService {
+public class JournalAuthClientImpl implements JournalAuthClient {
 
     private final RestClient restClient;
     private final JournalApiProperties journalApiProperties;

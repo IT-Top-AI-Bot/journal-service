@@ -1,7 +1,7 @@
 package com.aquadev.ittopai.config.journal;
 
-import com.aquadev.ittopai.service.journal.JournalUserIdResolver;
 import com.aquadev.ittopai.service.journal.token.JournalTokenManager;
+import com.aquadev.ittopai.service.journal.token.JournalUserIdResolver;
 import com.aquadev.ittopai.util.SecurityUtil;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpRequest;
