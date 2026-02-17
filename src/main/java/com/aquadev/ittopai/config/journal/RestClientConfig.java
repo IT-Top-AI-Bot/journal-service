@@ -1,11 +1,9 @@
 package com.aquadev.ittopai.config.journal;
 
-import com.aquadev.ittopai.service.journal.JournalUserIdResolver;
 import com.aquadev.ittopai.service.journal.token.JournalTokenManager;
+import com.aquadev.ittopai.service.journal.token.JournalUserIdResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
-import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -13,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.client.RestClient;
@@ -66,35 +65,36 @@ public class RestClientConfig {
 
     @Bean
     @Primary
-    public RestClient journalRestClient(RestClient.Builder builder) {
+    public RestClient journalRestClient() {
         ClientHttpRequestFactory bufferingFactory = createBufferingFactory();
 
-        return applySnakeCaseJson(applyCommon(builder, journalApiProperties))
+        return applySnakeCaseJson(applyCommon(RestClient.builder(), journalApiProperties))
+                .requestInterceptor(loggingInterceptor())
                 .requestInterceptor(journalAuthInterceptor())
                 .requestFactory(bufferingFactory)
                 .build();
     }
 
     @Bean("journalSystemRestClient")
-    public RestClient journalSystemRestClient(RestClient.Builder builder) {
+    public RestClient journalSystemRestClient() {
         ClientHttpRequestFactory bufferingFactory = createBufferingFactory();
 
-        return applySnakeCaseJson(applyCommon(builder, journalApiProperties))
+        return applySnakeCaseJson(applyCommon(RestClient.builder(), journalApiProperties))
+                .requestInterceptor(loggingInterceptor())
                 .requestFactory(bufferingFactory)
                 .build();
     }
 
+    @Bean
+    public ClientHttpRequestInterceptor loggingInterceptor() {
+        return new LoggingClientHttpRequestInterceptor();
+    }
+
     private ClientHttpRequestFactory createBufferingFactory() {
-        HttpClientSettings settings = HttpClientSettings.defaults()
-                .withConnectTimeout(Duration.ofSeconds(journalApiProperties.timeout().connect()))
-                .withReadTimeout(Duration.ofSeconds(journalApiProperties.timeout().read()));
-
-        ClientHttpRequestFactory baseFactory =
-                ClientHttpRequestFactoryBuilder.detect().build(settings);
-
-        ClientHttpRequestFactory bufferingFactory =
-                new BufferingClientHttpRequestFactory(baseFactory);
-        return bufferingFactory;
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(journalApiProperties.timeout().connect()));
+        factory.setReadTimeout(Duration.ofSeconds(journalApiProperties.timeout().read()));
+        return new BufferingClientHttpRequestFactory(factory);
     }
 
     @Bean
