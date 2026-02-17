@@ -34,10 +34,9 @@ repositories {
 }
 
 extra["springDocVersion"] = "3.0.1"
-extra["awsSdkVersion"] = "2.41.27"
+extra["awsSpringCloudVersion"] = "4.0.0"
 extra["mapStructVersion"] = "1.6.3"
 extra["keycloakAdminClientVersion"] = "26.0.8"
-val springCloudVersion by extra("2025.1.1")
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
@@ -50,9 +49,7 @@ dependencies {
     implementation("org.keycloak:keycloak-admin-client:${property("keycloakAdminClientVersion")}")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${property("springDocVersion")}")
     implementation("org.mapstruct:mapstruct:${property("mapStructVersion")}")
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
-    implementation(platform("software.amazon.awssdk:bom:${property("awsSdkVersion")}"))
-    implementation("software.amazon.awssdk:s3")
+    implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     annotationProcessor("org.mapstruct:mapstruct-processor:${property("mapStructVersion")}")
@@ -64,7 +61,7 @@ dependencies {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
+        mavenBom("io.awspring.cloud:spring-cloud-aws-dependencies:${property("awsSpringCloudVersion")}")
     }
 }
 
