@@ -6,20 +6,13 @@ spring:
     virtual:
       enabled: true
 
+  task:
+    scheduling:
+      pool:
+        size: 2
+
   config:
     import: optional:file:.env[.properties]
-
-  cloud:
-    aws:
-      credentials:
-        access-key: ${S3_ACCESS_KEY}
-        secret-key: ${S3_SECRET_KEY}
-      region:
-        static: ${S3_REGION}
-      s3:
-        enabled: true
-        endpoint: ${S3_ENDPOINT:}
-        path-style-access-enabled: true
 
   jpa:
     hibernate:
@@ -28,6 +21,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
@@ -56,6 +55,16 @@ journal:
     refresh-interval: 14400000
     refresh-before-expiry: 300
     max-retry-attempts: 3
+
+kafka:
+  homework-execution-topic: homework-execution
+  homework-execution-result: homework-execution-result
+
+outbox:
+  batch-size: 100
+  max-attempts: 5
+  retry-delay-seconds: 60
+  relay-interval-ms: 5000
 
 s3:
   bucket-name: homeworks

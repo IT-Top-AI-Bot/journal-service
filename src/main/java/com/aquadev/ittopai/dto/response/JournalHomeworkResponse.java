@@ -21,9 +21,8 @@ public record JournalHomeworkResponse(
         String nameSpec,
         Integer status,
         Integer commonStatus,
-        String homeworkStud,
-        String homeworkComment,
+        JournalHomeworkStudResponse homeworkStud,
+        JournalHomeworkCommentResponse homeworkComment,
         String coverImage
-
 ) {
 }

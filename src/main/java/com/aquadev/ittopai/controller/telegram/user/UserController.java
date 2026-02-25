@@ -1,4 +1,4 @@
-package com.aquadev.ittopai.controller.user;
+package com.aquadev.ittopai.controller.telegram.user;
 
 import com.aquadev.ittopai.dto.request.CreateUserRequest;
 import com.aquadev.ittopai.dto.response.UserResponse;

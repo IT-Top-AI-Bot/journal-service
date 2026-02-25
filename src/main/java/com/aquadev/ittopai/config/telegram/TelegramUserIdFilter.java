@@ -10,6 +10,8 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -19,6 +21,9 @@ public class TelegramUserIdFilter extends OncePerRequestFilter {
 
     public static final String HEADER = "X-Telegram-User-Id";
     public static final String ATTR = "telegramUserId";
+
+    private static final PathMatcher PATH = new AntPathMatcher();
+    private static final String TG_API_PATTERN = "/api/v*/telegram/**";
 
     @Override
     protected void doFilterInternal(
@@ -61,6 +66,7 @@ public class TelegramUserIdFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return PublicEndpoints.isPublicPath(request.getRequestURI());
+        String uri = request.getRequestURI();
+        return !PATH.match(TG_API_PATTERN, uri) || PublicEndpoints.isPublicPath(uri);
     }
 }

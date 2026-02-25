@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1771496794628-1
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_homework_execution
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: homework_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: spec_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: teach_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: group_id
+                  type: BIGINT
+              - column:
+                  name: teacher_fio
+                  type: VARCHAR(255)
+              - column:
+                  name: theme
+                  type: VARCHAR(1024)
+              - column:
+                  name: completion_time
+                  type: DATE
+              - column:
+                  name: overdue_time
+                  type: DATE
+              - column:
+                  name: comment
+                  type: VARCHAR(1024)
+              - column:
+                  name: name_spec
+                  type: VARCHAR(1024)
+              - column:
+                  name: homework_url
+                  type: VARCHAR(4096)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: status
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: created_at
+                  type: DATETIME
+            tableName: homework_execution
+

@@ -8,7 +8,8 @@ public final class PublicEndpoints {
             "/actuator/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/api/v1/auth/**"
+            "/api/v1/auth/**",
+            "/api/v1/internal/**"
     };
 
     private static final List<String> FILTER_PREFIXES = List.of(
@@ -16,6 +17,7 @@ public final class PublicEndpoints {
             "/swagger-ui",
             "/v3/api-docs",
             "/api/v1/auth",
+            "/api/v1/internal",
             "/error"
     );
 

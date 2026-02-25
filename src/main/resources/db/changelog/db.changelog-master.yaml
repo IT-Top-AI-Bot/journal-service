@@ -6,4 +6,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/master/changeset/003-add-journal-user.yaml
   - include:
-      file: db/changelog/master/changeset/004-add-journal-homework.yaml
+      file: db/changelog/master/changeset/004-add-homework-execution.yaml
+  - include:
+      file: db/changelog/master/changeset/005-add-outbox-event.yaml
+  - include:
+      file: db/changelog/master/changeset/006-homework-execution-result.yaml
