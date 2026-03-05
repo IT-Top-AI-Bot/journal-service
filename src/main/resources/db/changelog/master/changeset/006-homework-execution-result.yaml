@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-homework-execution-result
+      author: aqua
+      changes:
+        - addColumn:
+            tableName: homework_execution
+            columns:
+              - column:
+                  name: result_s3_key
+                  type: VARCHAR(4096)
+              - column:
+                  name: completed_at
+                  type: DATETIME

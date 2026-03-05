@@ -6,13 +6,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-      - ${PWD}/docker/postgres/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     env_file:
       - .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     healthcheck:
       test: pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
       interval: 10s
@@ -32,36 +31,52 @@ services:
       start_period: 10s
       retries: 5
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.5.2
+  kafka:
+    image: confluentinc/cp-kafka:8.1.1
     restart: "no"
-    command:
-      - "start-dev"
-      - "--features=token-exchange"
     ports:
-      - "9080:9080"
-    env_file:
-      - .env
+      - "29092:29092"
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     environment:
-      KC_HTTP_PORT: 9080
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL_HOST: postgres
-      KC_DB_URL_PORT: 5432
-      KC_DB_URL_DATABASE: "${KEYCLOAK_DB_NAME}"
-      KC_DB_USERNAME: "${KEYCLOAK_DB_USER}"
-      KC_DB_PASSWORD: "${KEYCLOAK_DB_PASSWORD}"
-      KC_HEALTH_ENABLED: "true"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_NODE_ID: 1
+      CLUSTER_ID: kLXNtzAfTcSlJbOgjTiYwA
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka:9093
     healthcheck:
-      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/localhost/9080 && echo -e \"GET /health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n\" >&3 && timeout 2 cat <&3 | grep -q \"200 OK\"" ]
+      test: kafka-topics --bootstrap-server localhost:9092 --list
       interval: 10s
       timeout: 5s
-      start_period: 90s
+      start_period: 30s
+      retries: 5
+    labels:
+      amplicode.image: confluent/kafka
+
+  kafkaui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    restart: "no"
+    ports:
+      - "8989:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: kLXNtzAfTcSlJbOgjTiYwA
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit -1
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
       retries: 5
     depends_on:
-      postgres:
-        condition: service_healthy
+      - kafka
 
 volumes:
   postgres_data:
+  kafka_data:

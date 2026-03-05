@@ -1,0 +1,20 @@
+package com.aquadev.journalservice.dto.response;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record JournalCountHomeworkResponse(
+        Integer counterTypeId,
+        JournalHomeworkStatus counterTypeName,
+        Integer counter
+) {
+
+    @JsonCreator
+    public JournalCountHomeworkResponse(
+            @JsonProperty("counterType") @JsonAlias("counter_type") Integer counterType,
+            @JsonProperty("counter") Integer counter
+    ) {
+        this(counterType, JournalHomeworkStatus.fromId(counterType), counter);
+    }
+}
