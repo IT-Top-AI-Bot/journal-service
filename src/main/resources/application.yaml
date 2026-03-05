@@ -1,29 +1,37 @@
 spring:
   application:
-    name: it-top-ai
+    name: journal-service
 
   threads:
     virtual:
       enabled: true
+
+  cloud:
+    aws:
+      s3:
+        endpoint: ${S3_ENDPOINT}
+        region: ${S3_REGION:us-east-1}
+      credentials:
+        access-key: ${S3_ACCESS_KEY}
+        secret-key: ${S3_SECRET_KEY}
 
   task:
     scheduling:
       pool:
         size: 2
 
-  config:
-    import: optional:file:.env[.properties]
-
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+#    show-sql: true
     properties:
       hibernate:
         format_sql: true
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+    consumer:
+      group-id: journal-service
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -41,6 +49,14 @@ spring:
       password: ${REDIS_PASSWORD:}
       timeout: 60000
 
+resilience4j:
+  ratelimiter:
+    instances:
+      journalApi:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1m
+        timeoutDuration: 60s
+
 journal:
   api:
     base-url: "https://msapi.top-academy.ru/api/v2"
@@ -56,9 +72,15 @@ journal:
     refresh-before-expiry: 300
     max-retry-attempts: 3
 
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
 kafka:
   homework-execution-topic: homework-execution
-  homework-execution-result: homework-execution-result
+  homework-execution-result: homework-result
 
 outbox:
   batch-size: 100
@@ -66,8 +88,11 @@ outbox:
   retry-delay-seconds: 60
   relay-interval-ms: 5000
 
+auto-homework:
+  check-interval-ms: 21600000  # 6 часов
+
 s3:
-  bucket-name: homeworks
+  bucket: homeworks-solutions
 
 crypto:
   secret-key: ${ENCRYPTION_KEY:MySecretKey12345MySecretKey12345}

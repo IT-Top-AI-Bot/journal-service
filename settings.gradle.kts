@@ -1,1 +1,1 @@
-rootProject.name = "it-top-ai"
+rootProject.name = "journal-service"

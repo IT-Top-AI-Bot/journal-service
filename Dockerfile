@@ -15,15 +15,15 @@ COPY settings.gradle.kts settings.gradle.kts
 COPY build.gradle.kts build.gradle.kts
 
 ENV SPRING_PROFILES_ACTIVE=aot
+ARG CI=false
+ENV CI=${CI}
 
-RUN --mount=type=cache,target=/root/.gradle \
-    chmod +x gradlew && \
-    ./gradlew --no-daemon -x test help
+RUN chmod +x gradlew && \
+    ./gradlew --no-daemon resolveDependencies
 
 COPY src/ src/
 
-RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew --no-daemon clean nativeCompile -x test
+RUN ./gradlew --no-daemon clean nativeCompile -x test
 
 RUN mkdir -p /out && \
     bin="$(find build/native/nativeCompile -maxdepth 1 -type f -executable | head -n 1)" && \

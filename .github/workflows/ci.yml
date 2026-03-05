@@ -59,5 +59,7 @@ jobs:
           tags: it-top-ai:ci
           push: false
           load: false
+          build-args: |
+            CI=true
           cache-from: type=gha
           cache-to: type=gha,mode=max

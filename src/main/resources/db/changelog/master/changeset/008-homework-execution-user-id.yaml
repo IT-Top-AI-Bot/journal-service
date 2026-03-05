@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-homework-execution-user-id
+      author: aqua
+      changes:
+        - addColumn:
+            tableName: homework_execution
+            columns:
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    foreignKeyName: fk_homework_execution_user
+                    references: users(id)
+        - createIndex:
+            tableName: homework_execution
+            indexName: idx_homework_execution_user_homework
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: homework_id
