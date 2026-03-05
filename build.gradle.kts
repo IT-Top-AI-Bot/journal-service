@@ -2,8 +2,7 @@ plugins {
     java
     id("org.sonarqube") version "7.2.2.6593"
     id("org.springframework.boot") version "4.0.3"
-    id("org.graalvm.buildtools.native") version "0.11.4"
-    id("io.spring.dependency-management") version "1.1.7"
+id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "com.aquadev"
@@ -71,14 +70,6 @@ dependencyManagement {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-graalvmNative {
-    binaries.all {
-        if (System.getenv("CI") == "true") {
-            buildArgs.add("-Ob")
-        }
-    }
 }
 
 tasks.register("resolveDependencies") {
