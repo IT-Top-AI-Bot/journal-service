@@ -37,8 +37,6 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
 
     private static final String AGGREGATE_TYPE = "HomeworkExecution";
     private static final String EVENT_TYPE = "HomeworkExecutionCreated";
-    private static final int NONE_STATUS = 2;
-    private static final int EXPIRED_STATUS = 0;
 
     private final JournalClient journalClient;
     private final UserRepository userRepository;
@@ -80,44 +78,43 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
         User user = settings.getUser();
         Long telegramId = user.getTelegramId();
         try {
-            TelegramUserContext.set(telegramId);
+            ScopedValue.where(TelegramUserContext.TG_USER_ID, telegramId).call(() -> {
+                Long groupId = user.getJournalUser().getJournalGroups().stream()
+                        .map(JournalGroup::getJournalGroupId)
+                        .findFirst()
+                        .orElse(null);
 
-            Long groupId = user.getJournalUser().getJournalGroups().stream()
-                    .map(JournalGroup::getJournalGroupId)
-                    .findFirst()
-                    .orElse(null);
+                if (groupId == null) {
+                    log.warn("No group found for user telegramId={}", telegramId);
+                    return null;
+                }
 
-            if (groupId == null) {
-                log.warn("No group found for user telegramId={}", telegramId);
-                return;
-            }
+                List<JournalHomeworkResponse> noneHomeworks =
+                        journalClient.getHomeworks(1, JournalHomeworkStatus.NOT_COMPLETED.getId(), 1, groupId.intValue());
+                List<JournalHomeworkResponse> expiredHomeworks =
+                        journalClient.getHomeworks(1, JournalHomeworkStatus.EXPIRED.getId(), 1, groupId.intValue());
 
-            List<JournalHomeworkResponse> noneHomeworks =
-                    journalClient.getHomeworks(1, JournalHomeworkStatus.NOT_COMPLETED.getId(), 1, groupId.intValue());
-            List<JournalHomeworkResponse> expiredHomeworks =
-                    journalClient.getHomeworks(1, JournalHomeworkStatus.EXPIRED.getId(), 1, groupId.intValue());
+                Set<Long> specIds = settings.getSpecIds();
 
-            Set<Long> specIds = settings.getSpecIds();
+                Stream.concat(
+                        noneHomeworks != null ? noneHomeworks.stream() : Stream.empty(),
+                        expiredHomeworks != null ? expiredHomeworks.stream() : Stream.empty()
+                ).filter(hw -> specIds.isEmpty() || specIds.contains(hw.idSpec().longValue()))
+                        .filter(hw -> !homeworkExecutionRepository.existsByUserAndHomeworkId(user, hw.id().longValue()))
+                        .forEach(hw -> createAndPublish(hw, user));
 
-            Stream.concat(
-                    noneHomeworks != null ? noneHomeworks.stream() : Stream.empty(),
-                    expiredHomeworks != null ? expiredHomeworks.stream() : Stream.empty()
-            ).filter(hw -> specIds.isEmpty() || specIds.contains(hw.idSpec().longValue()))
-                    .filter(hw -> !homeworkExecutionRepository.existsByUserAndHomeworkId(user, hw.id().longValue()))
-                    .forEach(hw -> createAndPublish(hw, user));
+                settings.setLastCheckedAt(Instant.now());
+                settingsRepository.save(settings);
 
-            settings.setLastCheckedAt(Instant.now());
-            settingsRepository.save(settings);
-
-            log.info("Auto homework check completed for user telegramId={}", telegramId);
+                log.info("Auto homework check completed for user telegramId={}", telegramId);
+                return null;
+            });
         } catch (HttpClientErrorException.Unauthorized | IllegalStateException e) {
             log.warn("Auth failure for user telegramId={}, disabling auto-homework: {}", telegramId, e.getMessage());
             settings.setEnabled(false);
             settingsRepository.save(settings);
         } catch (Exception e) {
             log.error("Error in auto homework check for user telegramId={}: {}", telegramId, e.getMessage(), e);
-        } finally {
-            TelegramUserContext.clear();
         }
     }
 

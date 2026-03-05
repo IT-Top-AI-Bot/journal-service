@@ -53,12 +53,17 @@ public class TelegramUserIdFilter extends OncePerRequestFilter {
                 new UsernamePasswordAuthenticationToken(telegramUserId, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        TelegramUserContext.set(telegramUserId);
         MDC.put("tgUserId", String.valueOf(telegramUserId));
         try {
-            filterChain.doFilter(request, response);
+            ScopedValue.where(TelegramUserContext.TG_USER_ID, telegramUserId).call(() -> {
+                filterChain.doFilter(request, response);
+                return null;
+            });
+        } catch (ServletException | IOException | RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         } finally {
-            TelegramUserContext.clear();
             MDC.remove("tgUserId");
             SecurityContextHolder.clearContext();
         }
