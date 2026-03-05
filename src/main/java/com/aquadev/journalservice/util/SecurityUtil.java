@@ -1,28 +1,14 @@
 package com.aquadev.journalservice.util;
 
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 public class SecurityUtil {
 
     public static long getCurrentTelegramUserId() {
-        Long fromContext = TelegramUserContext.get();
-        if (fromContext != null) {
-            return fromContext;
+        Long telegramUserId = TelegramUserContext.get();
+        if (telegramUserId != null) {
+            return telegramUserId;
         }
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            Object principal = authentication.getPrincipal();
-            if (principal instanceof Long id) {
-                return id;
-            }
-            if (principal instanceof String raw) {
-                return Long.parseLong(raw);
-            }
-        }
-
         throw new RuntimeException("No authenticated telegram user found");
     }
 }
