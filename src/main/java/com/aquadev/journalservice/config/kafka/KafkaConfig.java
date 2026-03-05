@@ -3,7 +3,6 @@ package com.aquadev.journalservice.config.kafka;
 import com.aquadev.journalservice.config.outbox.OutboxProperties;
 import com.aquadev.journalservice.dto.kafka.HomeworkExecutionResultEvent;
 import com.aquadev.journalservice.exception.base.NotFoundException;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -29,15 +28,14 @@ import java.util.Map;
 public class KafkaConfig {
 
     @Bean
+    @SuppressWarnings("removal") // JsonDeserializer deprecated for removal in Spring Kafka — migrate when replacement is available
     public ConsumerFactory<String, HomeworkExecutionResultEvent> homeworkResultConsumerFactory(KafkaProperties bootKafkaProps) {
         Map<String, Object> configs = bootKafkaProps.buildConsumerProperties();
-        configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        configs.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
-        configs.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
-        configs.put(JsonDeserializer.VALUE_DEFAULT_TYPE, HomeworkExecutionResultEvent.class.getName());
-        configs.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-        return new DefaultKafkaConsumerFactory<>(configs);
+        var jsonDeserializer = new JsonDeserializer<>(HomeworkExecutionResultEvent.class);
+        jsonDeserializer.setUseTypeHeaders(false);
+        return new DefaultKafkaConsumerFactory<>(configs,
+                new StringDeserializer(),
+                new ErrorHandlingDeserializer<>(jsonDeserializer));
     }
 
     @Bean

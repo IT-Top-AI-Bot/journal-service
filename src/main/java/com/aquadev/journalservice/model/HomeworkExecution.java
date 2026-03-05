@@ -68,6 +68,7 @@ public class HomeworkExecution {
     @Column(name = "homework_url", length = 4096)
     private String homeworkUrl;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private HomeworkExecutionStatus status = HomeworkExecutionStatus.PENDING;
