@@ -5,16 +5,16 @@ on:
   pull_request:
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  test:
+    name: Run Tests
     permissions:
       contents: read
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -26,40 +26,95 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Build
-        run: ./gradlew --no-daemon clean assemble
-        env:
-          SPRING_PROFILES_ACTIVE: aot
-
       - name: Run tests
         run: ./gradlew --no-daemon test
         env:
           SPRING_PROFILES_ACTIVE: aot
 
-  docker:
-    name: Build Docker image
+  native-build:
+    name: Native Image Build
     permissions:
       contents: read
     runs-on: ubuntu-latest
-    needs: build-and-test
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM 25
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: "25"
+          distribution: "graalvm-community"
+          cache: "gradle"
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Build native image
+        run: ./gradlew --no-daemon nativeCompile -x test
+        env:
+          SPRING_PROFILES_ACTIVE: aot
+          CI: "true"
+
+      - name: Upload native binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-binary
+          path: build/native/nativeCompile/journal-service
+          retention-days: 1
+          if-no-files-found: error
+
+  docker:
+    name: Build Docker Image
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    needs: [test, native-build]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download native binary
+        uses: actions/download-artifact@v4
+        with:
+          name: native-binary
+          path: ./docker-context
+
+      - name: Make binary executable
+        run: chmod +x docker-context/journal-service
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+      - name: Login to GitHub Container Registry
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: docker/login-action@v3
         with:
-          context: .
-          file: ./Dockerfile
-          tags: it-top-ai:ci
-          push: false
-          load: false
-          build-args: |
-            CI=true
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/journal-service
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=sha,format=short
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker-context
+          file: ./Dockerfile.ci
+          push: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
