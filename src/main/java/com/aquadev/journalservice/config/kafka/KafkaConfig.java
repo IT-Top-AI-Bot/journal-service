@@ -18,7 +18,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.Map;
@@ -28,11 +28,10 @@ import java.util.Map;
 public class KafkaConfig {
 
     @Bean
-    @SuppressWarnings("removal") // JsonDeserializer deprecated for removal in Spring Kafka — migrate when replacement is available
     public ConsumerFactory<String, HomeworkExecutionResultEvent> homeworkResultConsumerFactory(KafkaProperties bootKafkaProps) {
         Map<String, Object> configs = bootKafkaProps.buildConsumerProperties();
-        var jsonDeserializer = new JsonDeserializer<>(HomeworkExecutionResultEvent.class);
-        jsonDeserializer.setUseTypeHeaders(false);
+        // useHeadersIfPresent=false: deserialize by target type, not by Kafka message headers
+        var jsonDeserializer = new JacksonJsonDeserializer<>(HomeworkExecutionResultEvent.class, false);
         return new DefaultKafkaConsumerFactory<>(configs,
                 new StringDeserializer(),
                 new ErrorHandlingDeserializer<>(jsonDeserializer));
