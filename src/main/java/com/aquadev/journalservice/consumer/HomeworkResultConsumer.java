@@ -1,6 +1,6 @@
 package com.aquadev.journalservice.consumer;
 
-import com.aquadev.journalservice.dto.kafka.HomeworkExecutionResultEvent;
+import com.aquadev.commonlibs.HomeworkExecutionResultEvent;
 import com.aquadev.journalservice.service.execution.HomeworkExecutionResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

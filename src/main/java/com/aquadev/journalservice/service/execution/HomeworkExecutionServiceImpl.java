@@ -1,6 +1,6 @@
 package com.aquadev.journalservice.service.execution;
 
-import com.aquadev.journalservice.dto.response.HomeworkExecutionStatus;
+import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.model.HomeworkExecution;
 import com.aquadev.journalservice.repository.HomeworkExecutionRepository;
 import lombok.RequiredArgsConstructor;

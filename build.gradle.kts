@@ -2,7 +2,7 @@ plugins {
     java
     id("org.sonarqube") version "7.2.2.6593"
     id("org.springframework.boot") version "4.0.3"
-id("io.spring.dependency-management") version "1.1.7"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "com.aquadev"
@@ -28,16 +28,27 @@ configurations {
     }
 }
 
+
 repositories {
     mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/IT-Top-AI-Bot/common-libs")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user")?.toString()
+            password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key")?.toString()
+        }
+    }
 }
 
+val commonLibsVersion by extra("1.0.0")
 val mapStructVersion by extra("1.6.3")
 val springDocVersion by extra("3.0.1")
 val springCloudAwsVersion by extra("4.0.0")
 val springCloudVersion by extra("2025.1.1")
 
 dependencies {
+    implementation("com.aquadev:common-libs:$commonLibsVersion")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-aspectj")
@@ -54,7 +65,7 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
-    annotationProcessor("org.mapstruct:mapstruct-processor:${property("mapStructVersion")}")
+    annotationProcessor("org.mapstruct:mapstruct-processor:$mapStructVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.h2database:h2")
     testImplementation("org.springframework.kafka:spring-kafka-test")
@@ -70,13 +81,4 @@ dependencyManagement {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-tasks.register("resolveDependencies") {
-    doLast {
-        project.rootProject.allprojects.forEach { subProject ->
-            subProject.buildscript.configurations.forEach { if (it.isCanBeResolved) it.resolve() }
-            subProject.configurations.forEach { if (it.isCanBeResolved) it.resolve() }
-        }
-    }
 }

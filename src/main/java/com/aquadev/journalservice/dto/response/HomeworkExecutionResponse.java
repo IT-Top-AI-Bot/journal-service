@@ -1,5 +1,7 @@
 package com.aquadev.journalservice.dto.response;
 
+import com.aquadev.commonlibs.HomeworkExecutionStatus;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;

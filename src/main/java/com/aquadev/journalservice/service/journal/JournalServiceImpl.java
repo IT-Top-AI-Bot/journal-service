@@ -3,7 +3,7 @@ package com.aquadev.journalservice.service.journal;
 import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.kafka.KafkaTopicProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
-import com.aquadev.journalservice.dto.kafka.HomeworkExecutionEvent;
+import com.aquadev.commonlibs.HomeworkExecutionEvent;
 import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.exception.domain.user.UserNotFoundException;
@@ -64,7 +64,22 @@ public class JournalServiceImpl implements JournalService {
                 homeworkExecution.getId().toString(),
                 EVENT_TYPE,
                 kafkaProperties.homeworkExecutionTopic(),
-                HomeworkExecutionEvent.from(homeworkExecution)
+                new HomeworkExecutionEvent(
+                        homeworkExecution.getId(),
+                        homeworkExecution.getTheme(),
+                        homeworkExecution.getSpecId(),
+                        homeworkExecution.getStatus(),
+                        homeworkExecution.getComment(),
+                        homeworkExecution.getGroupId(),
+                        homeworkExecution.getTeachId(),
+                        homeworkExecution.getNameSpec(),
+                        homeworkExecution.getCreatedAt(),
+                        homeworkExecution.getHomeworkId(),
+                        homeworkExecution.getTeacherFio(),
+                        homeworkExecution.getHomeworkUrl(),
+                        homeworkExecution.getOverdueTime(),
+                        homeworkExecution.getCompletionTime()
+                )
         );
 
         return homeworkExecution;

@@ -1,7 +1,7 @@
 package com.aquadev.journalservice.config.kafka;
 
 import com.aquadev.journalservice.config.outbox.OutboxProperties;
-import com.aquadev.journalservice.dto.kafka.HomeworkExecutionResultEvent;
+import com.aquadev.commonlibs.HomeworkExecutionResultEvent;
 import com.aquadev.journalservice.exception.base.NotFoundException;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;

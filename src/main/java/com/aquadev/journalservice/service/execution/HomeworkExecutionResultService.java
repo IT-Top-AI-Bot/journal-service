@@ -1,6 +1,6 @@
 package com.aquadev.journalservice.service.execution;
 
-import com.aquadev.journalservice.dto.kafka.HomeworkExecutionResultEvent;
+import com.aquadev.commonlibs.HomeworkExecutionResultEvent;
 
 public interface HomeworkExecutionResultService {
 

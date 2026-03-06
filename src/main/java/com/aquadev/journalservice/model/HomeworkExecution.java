@@ -1,6 +1,6 @@
 package com.aquadev.journalservice.model;
 
-import com.aquadev.journalservice.dto.response.HomeworkExecutionStatus;
+import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.generator.GeneratedUuidV7;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -3,7 +3,7 @@ package com.aquadev.journalservice.service.execution;
 import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.s3.S3BucketProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
-import com.aquadev.journalservice.dto.kafka.HomeworkExecutionResultEvent;
+import com.aquadev.commonlibs.HomeworkExecutionResultEvent;
 import com.aquadev.journalservice.model.HomeworkExecution;
 import com.aquadev.journalservice.service.execution.HomeworkExecutionPersistenceService.ExecutionWithTelegramId;
 import lombok.RequiredArgsConstructor;

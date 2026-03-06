@@ -2,7 +2,7 @@ package com.aquadev.journalservice.mapper;
 
 import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
 import com.aquadev.journalservice.dto.response.HomeworkExecutionResponse;
-import com.aquadev.journalservice.dto.response.HomeworkExecutionStatus;
+import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.model.HomeworkExecution;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

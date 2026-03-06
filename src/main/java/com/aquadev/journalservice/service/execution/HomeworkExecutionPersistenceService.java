@@ -1,7 +1,7 @@
 package com.aquadev.journalservice.service.execution;
 
-import com.aquadev.journalservice.dto.kafka.HomeworkExecutionResultEvent;
-import com.aquadev.journalservice.dto.response.HomeworkExecutionStatus;
+import com.aquadev.commonlibs.HomeworkExecutionResultEvent;
+import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.exception.domain.homeworkexecution.HomeworkExecutionNotFoundException;
 import com.aquadev.journalservice.model.HomeworkExecution;
 import com.aquadev.journalservice.repository.HomeworkExecutionRepository;

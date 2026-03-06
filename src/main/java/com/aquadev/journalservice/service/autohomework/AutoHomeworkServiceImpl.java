@@ -4,10 +4,10 @@ import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.journal.JournalApiProperties;
 import com.aquadev.journalservice.config.kafka.KafkaTopicProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
-import com.aquadev.journalservice.dto.kafka.HomeworkExecutionEvent;
 import com.aquadev.journalservice.dto.request.UpdateAutoHomeworkSettingsRequest;
 import com.aquadev.journalservice.dto.response.AutoHomeworkSettingsResponse;
-import com.aquadev.journalservice.dto.response.HomeworkExecutionStatus;
+import com.aquadev.commonlibs.HomeworkExecutionEvent;
+import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkStatus;
 import com.aquadev.journalservice.exception.domain.user.UserNotFoundException;
@@ -148,7 +148,22 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                 execution.getId().toString(),
                 EVENT_TYPE,
                 kafkaProperties.homeworkExecutionTopic(),
-                HomeworkExecutionEvent.from(execution)
+                new HomeworkExecutionEvent(
+                        execution.getId(),
+                        execution.getTheme(),
+                        execution.getSpecId(),
+                        execution.getStatus(),
+                        execution.getComment(),
+                        execution.getGroupId(),
+                        execution.getTeachId(),
+                        execution.getNameSpec(),
+                        execution.getCreatedAt(),
+                        execution.getHomeworkId(),
+                        execution.getTeacherFio(),
+                        execution.getHomeworkUrl(),
+                        execution.getOverdueTime(),
+                        execution.getCompletionTime()
+                )
         );
 
         log.debug("Dispatched auto homework execution id={} homeworkId={} for user telegramId={}",
