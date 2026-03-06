@@ -35,7 +35,7 @@ jobs:
         run: ./gradlew assemble -x test
         env:
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_READ_PACKAGES }}
 
   test:
     name: Test
@@ -66,7 +66,7 @@ jobs:
         run: ./gradlew test
         env:
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_READ_PACKAGES }}
 
   docker-build:
     name: Docker Build
