@@ -5,6 +5,9 @@
 !src/
 !src/**
 
+# Allow compiled JAR
+!build/libs/*.jar
+
 # Allow Gradle wrapper + build scripts
 !gradlew
 !gradlew.bat
