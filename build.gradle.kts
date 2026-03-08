@@ -35,9 +35,8 @@ repositories {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/IT-Top-AI-Bot/common-libs")
         credentials {
-            username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user")?.toString()
-            password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key")?.toString()
-            println("Username: ${username}, Password: ${password}")
+            username = System.getenv("GPR_USER") ?: project.findProperty("gpr.user")?.toString()
+            password = System.getenv("GPR_API_KEY") ?: project.findProperty("gpr.key")?.toString()
         }
     }
 }

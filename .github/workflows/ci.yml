@@ -34,10 +34,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Compile and package
-        run: ./gradlew assemble -x test --refresh-dependencies --no-configuration-cache --no-build-cache
+        run: ./gradlew assemble -x test
         env:
-          GITHUB_ACTOR: aquadevv
-          GITHUB_TOKEN: ${{ secrets.PAT_READ_PACKAGES }}
+          GPR_USER: ${{ github.actor }}
+          GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGES }}
 
   test:
     name: Test
@@ -67,8 +67,8 @@ jobs:
       - name: Run tests
         run: ./gradlew test
         env:
-          GITHUB_ACTOR: aquadevv
-          GITHUB_TOKEN: ${{ secrets.PAT_READ_PACKAGES }}
+          GPR_USER: ${{ github.actor }}
+          GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGES }}
 
   docker-build:
     name: Docker Build
