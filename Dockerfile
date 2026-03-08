@@ -1,23 +1,14 @@
 # syntax=docker/dockerfile:1.7
 
 ############################
-# Stage: build JAR
+# Stage: extract layers from pre-built JAR
 ############################
-FROM eclipse-temurin:25-jdk AS builder
+FROM eclipse-temurin:25-jdk AS extractor
 WORKDIR /application
 
-RUN apt-get update && apt-get install -y --no-install-recommends findutils && rm -rf /var/lib/apt/lists/*
+COPY build/libs/*.jar application.jar
 
-COPY gradlew ./
-COPY gradle gradle
-COPY settings.gradle.kts build.gradle.kts ./
-COPY src src
-
-RUN --mount=type=cache,target=/root/.gradle \
-    chmod +x gradlew && \
-    ./gradlew --no-daemon clean bootJar -x test
-
-RUN java -Djarmode=tools -jar build/libs/*.jar extract --layers --destination extracted
+RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
 
 ############################
 # Stage: final runtime image
@@ -30,10 +21,10 @@ USER spring:spring
 
 VOLUME ["/tmp"]
 
-COPY --from=builder /application/extracted/dependencies/ ./
-COPY --from=builder /application/extracted/spring-boot-loader/ ./
-COPY --from=builder /application/extracted/snapshot-dependencies/ ./
-COPY --from=builder /application/extracted/application/ ./
+COPY --from=extractor /application/extracted/dependencies/ ./
+COPY --from=extractor /application/extracted/spring-boot-loader/ ./
+COPY --from=extractor /application/extracted/snapshot-dependencies/ ./
+COPY --from=extractor /application/extracted/application/ ./
 
 EXPOSE 8080
 
