@@ -34,7 +34,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Compile and package
-        run: ./gradlew assemble -x test
+        run: ./gradlew assemble -x test --no-configuration-cache --info
         env:
           GPR_USER: ${{ github.actor }}
           GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGES }}
