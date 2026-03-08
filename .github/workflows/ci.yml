@@ -33,6 +33,17 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
+      - name: Check secret availability
+        run: |
+          if [ -z "${GPR_API_KEY}" ]; then
+            echo "SECRET IS EMPTY"
+            exit 1
+          else
+            echo "SECRET IS SET (Length: ${#GPR_API_KEY})"
+          fi
+        env:
+          GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGES }}
+
       - name: Compile and package
         run: ./gradlew assemble -x test --no-configuration-cache --info
         env:
