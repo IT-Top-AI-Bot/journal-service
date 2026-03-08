@@ -42,13 +42,14 @@ jobs:
             echo "SECRET IS SET (Length: ${#GPR_API_KEY})"
           fi
         env:
-          GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGES }}
+          GPR_USER: ${{ github.actor }}
+          GPR_API_KEY: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compile and package
         run: ./gradlew assemble -x test --no-configuration-cache --info
         env:
           GPR_USER: ${{ github.actor }}
-          GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGES }}
+          GPR_API_KEY: ${{ secrets.GITHUB_TOKEN }}
 
   test:
     name: Test
