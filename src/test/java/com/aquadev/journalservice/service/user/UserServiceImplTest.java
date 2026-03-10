@@ -26,9 +26,15 @@ import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -135,9 +141,11 @@ class UserServiceImplTest {
         assertThatThrownBy(() ->
                 ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
                         .call(() -> userService.createUser(request))
-        ).isInstanceOf(RuntimeException.class);
+        ).isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Unauthorized");
 
         verify(userRepository, never()).save(any());
+        verifyNoInteractions(journalClient, journalTokenManager, journalUserIdResolver);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

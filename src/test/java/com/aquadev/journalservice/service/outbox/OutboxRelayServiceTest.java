@@ -14,9 +14,15 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OutboxRelayServiceTest {
@@ -68,7 +74,7 @@ class OutboxRelayServiceTest {
 
         when(outboxRelayDao.lockAndMarkProcessing()).thenReturn(List.of(event));
         when(outboxKafkaTemplate.send(any(ProducerRecord.class)))
-                .thenThrow(new RuntimeException("Kafka unavailable"));
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Kafka unavailable")));
 
         relayService.relay();
 

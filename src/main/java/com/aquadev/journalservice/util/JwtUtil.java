@@ -19,7 +19,7 @@ public class JwtUtil {
         }
 
         String[] parts = token.split("\\.");
-        if (parts.length < 2) {
+        if (parts.length != 3) {
             throw new IllegalArgumentException("Invalid JWT format - expected 3 parts separated by '.'");
         }
 
@@ -39,6 +39,10 @@ public class JwtUtil {
 
     public static Long getUserIdFromJwt(String token) {
         Map<String, Object> claims = decodeJwt(token);
-        return Long.parseLong(claims.get("userId").toString());
+        Object userIdObj = claims.get("userId");
+        if (userIdObj == null) {
+            throw new IllegalArgumentException("Missing userId claim");
+        }
+        return Long.parseLong(userIdObj.toString());
     }
 }

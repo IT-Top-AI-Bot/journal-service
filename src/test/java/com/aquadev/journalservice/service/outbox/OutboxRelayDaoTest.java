@@ -11,13 +11,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OutboxRelayDaoTest {
@@ -99,10 +104,12 @@ class OutboxRelayDaoTest {
 
         when(outboxEventRepository.findById(id)).thenReturn(Optional.of(managed));
 
+        Instant expectedNextAttempt = Instant.now().plusSeconds(30);
         outboxRelayDao.updateStatus(stub, false);
 
         assertThat(managed.getStatus()).isEqualTo(OutboxStatus.NEW);
         assertThat(managed.getAttempts()).isEqualTo(1);
+        assertThat(managed.getNextAttemptAt()).isCloseTo(expectedNextAttempt, within(2, ChronoUnit.SECONDS));
     }
 
     // ── updateStatus: error final ─────────────────────────────────────────────

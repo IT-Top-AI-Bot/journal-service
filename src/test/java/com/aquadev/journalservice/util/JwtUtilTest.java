@@ -5,7 +5,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Base64;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtUtilTest {
 
@@ -42,11 +43,15 @@ class JwtUtilTest {
 
     @Test
     void decodeJwt_missingParts_throwsIllegalArgument() {
-        // BUG: error message says "expected 3 parts" but code only validates length < 2,
-        // meaning a 2-part string is accepted. A true JWT needs 3 parts.
+        // Assert that a single-part token throws IllegalArgumentException
         assertThatThrownBy(() -> JwtUtil.decodeJwt("onlyonepart"))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Invalid JWT format");
+                .hasMessageContaining("Invalid JWT format - expected 3 parts");
+
+        // Assert that a two-part token throws IllegalArgumentException
+        assertThatThrownBy(() -> JwtUtil.decodeJwt("header.payload"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid JWT format - expected 3 parts");
     }
 
     @Test
@@ -73,11 +78,11 @@ class JwtUtilTest {
     }
 
     @Test
-    void getUserIdFromJwt_missingUserIdClaim_throwsNPE() {
-        // BUG: claims.get("userId") returns null → NPE on .toString()
+    void getUserIdFromJwt_missingUserIdClaim_throwsIllegalArgument() {
         String jwt = makeJwt("{\"sub\":\"user\"}");
         assertThatThrownBy(() -> JwtUtil.getUserIdFromJwt(jwt))
-                .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Missing userId claim");
     }
 
     @Test

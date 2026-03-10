@@ -47,9 +47,10 @@ public class JournalControllerImpl implements JournalController {
 
     @Override
     @GetMapping("/homework")
-    public List<JournalHomeworkResponse> getHomeworks(@RequestParam Integer page,
-                                                      @RequestParam Integer status,
-                                                      @RequestParam Integer type) {
+    public List<JournalHomeworkResponse> getHomeworks(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "1") Integer status,
+            @RequestParam(defaultValue = "1") Integer type) {
         return journalService.getHomeworksForUser(page, status, type);
     }
 
