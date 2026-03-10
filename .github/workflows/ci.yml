@@ -69,11 +69,16 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Run tests
-        run: ./gradlew test jacocoTestReport
+      - name: Run tests and generate JaCoCo report
+        run: ./gradlew test jacocoTestReport --info
         env:
           GPR_USER: ${{ github.actor }}
           GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGE }}
+
+      - name: Run SonarCloud Analysis
+        run: ./gradlew sonar --info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   docker-build-push:
     name: Docker Build and Push

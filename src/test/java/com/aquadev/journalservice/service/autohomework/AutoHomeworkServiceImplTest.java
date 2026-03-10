@@ -181,7 +181,7 @@ class AutoHomeworkServiceImplTest {
     @Test
     void checkAndDispatch_noGroup_skipsDispatch() {
         User user = buildUserWithJournalUser(Set.of()); // no groups
-        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId so it passes early exit
 
         service.checkAndDispatch(settings);
 
@@ -192,7 +192,7 @@ class AutoHomeworkServiceImplTest {
     void checkAndDispatch_dispatchesNewHomework() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
-        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, "http://example.com/hw.pdf");
         when(journalClient.getHomeworks(1, JournalHomeworkStatus.NOT_COMPLETED.getId(), 1, 10))
@@ -223,7 +223,7 @@ class AutoHomeworkServiceImplTest {
     void checkAndDispatch_homeworkAlreadyExists_skipsDispatch() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
-        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, null);
         when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
@@ -277,11 +277,12 @@ class AutoHomeworkServiceImplTest {
     void checkAndDispatch_emptySpecIds_dispatchesNothing() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
-        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of()); // Here empty is intended
 
         JournalHomeworkResponse hw1 = makeHomework(1, 10, 3, 10, null);
         JournalHomeworkResponse hw2 = makeHomework(2, 20, 3, 10, null);
 
+        // This mock won't actually be called due to early exit, but leaving it is harmless
         when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
                 .thenReturn(List.of(hw1, hw2));
 
@@ -298,7 +299,7 @@ class AutoHomeworkServiceImplTest {
     void checkAndDispatch_unauthorizedError_disablesAutoHomework() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
-        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt()))
                 .thenThrow(HttpClientErrorException.Unauthorized.class);
@@ -313,7 +314,7 @@ class AutoHomeworkServiceImplTest {
     void checkAndDispatch_homeworkUrlBuiltFromFilePath() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
-        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         // filePath is relative — should be prefixed with journalUrl
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, "/files/hw.pdf");
@@ -345,7 +346,7 @@ class AutoHomeworkServiceImplTest {
     void checkAndDispatch_homeworkUrlAlreadyAbsolute_notPrefixed() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
-        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, "https://cdn.example.com/hw.pdf");
         when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
