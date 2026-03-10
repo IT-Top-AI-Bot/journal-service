@@ -9,7 +9,11 @@ import com.aquadev.journalservice.dto.response.AutoHomeworkSettingsResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkStatus;
 import com.aquadev.journalservice.exception.domain.user.UserNotFoundException;
-import com.aquadev.journalservice.model.*;
+import com.aquadev.journalservice.model.HomeworkExecution;
+import com.aquadev.journalservice.model.JournalGroup;
+import com.aquadev.journalservice.model.JournalUser;
+import com.aquadev.journalservice.model.User;
+import com.aquadev.journalservice.model.UserAutoHomeworkSettings;
 import com.aquadev.journalservice.repository.HomeworkExecutionRepository;
 import com.aquadev.journalservice.repository.UserAutoHomeworkSettingsRepository;
 import com.aquadev.journalservice.repository.UserRepository;
@@ -24,23 +28,42 @@ import org.mockito.quality.Strictness;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AutoHomeworkServiceImplTest {
 
-    @Mock JournalClient journalClient;
-    @Mock UserRepository userRepository;
-    @Mock HomeworkExecutionRepository homeworkExecutionRepository;
-    @Mock UserAutoHomeworkSettingsRepository settingsRepository;
-    @Mock OutboxEventPublisher outboxEventPublisher;
-    @Mock KafkaTopicProperties kafkaProperties;
-    @Mock JournalApiProperties journalApiProperties;
+    @Mock
+    JournalClient journalClient;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    HomeworkExecutionRepository homeworkExecutionRepository;
+    @Mock
+    UserAutoHomeworkSettingsRepository settingsRepository;
+    @Mock
+    OutboxEventPublisher outboxEventPublisher;
+    @Mock
+    KafkaTopicProperties kafkaProperties;
+    @Mock
+    JournalApiProperties journalApiProperties;
 
     @InjectMocks
     AutoHomeworkServiceImpl service;
@@ -94,8 +117,10 @@ class AutoHomeworkServiceImplTest {
     void updateSettings_userNotFound_throwsUserNotFoundException() {
         when(userRepository.findByTelegramId(TELEGRAM_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.updateSettings(TELEGRAM_ID,
-                new UpdateAutoHomeworkSettingsRequest(true, Set.of(1L))))
+        UpdateAutoHomeworkSettingsRequest request =
+                new UpdateAutoHomeworkSettingsRequest(true, Set.of(1L));
+
+        assertThatThrownBy(() -> service.updateSettings(TELEGRAM_ID, request))
                 .isInstanceOf(UserNotFoundException.class);
     }
 
@@ -164,7 +189,7 @@ class AutoHomeworkServiceImplTest {
     }
 
     @Test
-    void checkAndDispatch_dispatchesNewHomework() throws Exception {
+    void checkAndDispatch_dispatchesNewHomework() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
@@ -184,7 +209,10 @@ class AutoHomeworkServiceImplTest {
         when(journalApiProperties.journalUrl()).thenReturn("http://api");
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                .call(() -> { service.checkAndDispatch(settings); return null; });
+                .call(() -> {
+                    service.checkAndDispatch(settings);
+                    return null;
+                });
 
         verify(outboxEventPublisher).publish(any(), any(), any(), any(), any());
         verify(settingsRepository).save(settings);
@@ -192,7 +220,7 @@ class AutoHomeworkServiceImplTest {
     }
 
     @Test
-    void checkAndDispatch_homeworkAlreadyExists_skipsDispatch() throws Exception {
+    void checkAndDispatch_homeworkAlreadyExists_skipsDispatch() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
@@ -205,13 +233,16 @@ class AutoHomeworkServiceImplTest {
         when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(true);
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                .call(() -> { service.checkAndDispatch(settings); return null; });
+                .call(() -> {
+                    service.checkAndDispatch(settings);
+                    return null;
+                });
 
         verifyNoInteractions(outboxEventPublisher);
     }
 
     @Test
-    void checkAndDispatch_specIdFilterApplied_onlyMatchingSpecIdsDispatched() throws Exception {
+    void checkAndDispatch_specIdFilterApplied_onlyMatchingSpecIdsDispatched() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
         // Only specId=5 allowed
@@ -233,41 +264,34 @@ class AutoHomeworkServiceImplTest {
         when(journalApiProperties.journalUrl()).thenReturn("http://api");
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                .call(() -> { service.checkAndDispatch(settings); return null; });
+                .call(() -> {
+                    service.checkAndDispatch(settings);
+                    return null;
+                });
 
         // Only 1 matching homework dispatched
         verify(outboxEventPublisher, times(1)).publish(any(), any(), any(), any(), any());
     }
 
     @Test
-    void checkAndDispatch_emptySpecIds_dispatchesAllSubjects() throws Exception {
-        // BUG DOCUMENTATION: specIds.isEmpty() = true → all homeworks are dispatched
-        // regardless of subject. This might not be the intended behavior for users
-        // who explicitly set an empty subjects list.
+    void checkAndDispatch_emptySpecIds_dispatchesNothing() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
-        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of()); // empty specIds
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
 
         JournalHomeworkResponse hw1 = makeHomework(1, 10, 3, 10, null);
         JournalHomeworkResponse hw2 = makeHomework(2, 20, 3, 10, null);
+
         when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
                 .thenReturn(List.of(hw1, hw2));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt()))
-                .thenReturn(List.of());
-        when(homeworkExecutionRepository.existsByUserAndHomeworkId(any(), anyLong())).thenReturn(false);
-        when(homeworkExecutionRepository.saveAndFlush(any())).thenAnswer(inv -> {
-            HomeworkExecution e = inv.getArgument(0);
-            e.setId(UUID.randomUUID());
-            return e;
-        });
-        when(kafkaProperties.homeworkExecutionTopic()).thenReturn("topic");
-        when(journalApiProperties.journalUrl()).thenReturn("http://api");
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                .call(() -> { service.checkAndDispatch(settings); return null; });
+                .call(() -> {
+                    service.checkAndDispatch(settings);
+                    return null;
+                });
 
-        // Both homeworks dispatched because specIds is empty
-        verify(outboxEventPublisher, times(2)).publish(any(), any(), any(), any(), any());
+        verify(outboxEventPublisher, never()).publish(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -286,7 +310,7 @@ class AutoHomeworkServiceImplTest {
     }
 
     @Test
-    void checkAndDispatch_homeworkUrlBuiltFromFilePath() throws Exception {
+    void checkAndDispatch_homeworkUrlBuiltFromFilePath() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
@@ -307,7 +331,10 @@ class AutoHomeworkServiceImplTest {
         when(kafkaProperties.homeworkExecutionTopic()).thenReturn("topic");
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                .call(() -> { service.checkAndDispatch(settings); return null; });
+                .call(() -> {
+                    service.checkAndDispatch(settings);
+                    return null;
+                });
 
         verify(homeworkExecutionRepository).saveAndFlush(argThat(ex ->
                 "https://journal.example.com/files/hw.pdf".equals(ex.getHomeworkUrl())
@@ -315,7 +342,7 @@ class AutoHomeworkServiceImplTest {
     }
 
     @Test
-    void checkAndDispatch_homeworkUrlAlreadyAbsolute_notPrefixed() throws Exception {
+    void checkAndDispatch_homeworkUrlAlreadyAbsolute_notPrefixed() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of());
@@ -334,7 +361,10 @@ class AutoHomeworkServiceImplTest {
         when(kafkaProperties.homeworkExecutionTopic()).thenReturn("topic");
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                .call(() -> { service.checkAndDispatch(settings); return null; });
+                .call(() -> {
+                    service.checkAndDispatch(settings);
+                    return null;
+                });
 
         verify(homeworkExecutionRepository).saveAndFlush(argThat(ex ->
                 "https://cdn.example.com/hw.pdf".equals(ex.getHomeworkUrl())

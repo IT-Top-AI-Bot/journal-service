@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class OutboxEventTest {
 
@@ -33,8 +33,6 @@ class OutboxEventTest {
 
     @Test
     void newEvent_idIsNull_soJpaPersistsCorrectly() {
-        // CRITICAL: id must be null so @GeneratedValue(UUID) works;
-        // if id != null, Spring Data calls merge() instead of persist()
         assertThat(makeNew().getId()).isNull();
     }
 
@@ -60,9 +58,12 @@ class OutboxEventTest {
         OutboxEvent event = makeNew();
         Instant before = Instant.now();
         event.markProcessing("worker-1");
+        Instant after = Instant.now();
         assertThat(event.getStatus()).isEqualTo(OutboxStatus.PROCESSING);
         assertThat(event.getLockedBy()).isEqualTo("worker-1");
-        assertThat(event.getLockedAt()).isAfterOrEqualTo(before);
+        assertThat(event.getLockedAt())
+                .isAfterOrEqualTo(before)
+                .isBeforeOrEqualTo(after);
     }
 
     // ── markSent ──────────────────────────────────────────────────────────────
@@ -73,8 +74,11 @@ class OutboxEventTest {
         event.markProcessing("worker-1");
         Instant before = Instant.now();
         event.markSent();
+        Instant after = Instant.now();
         assertThat(event.getStatus()).isEqualTo(OutboxStatus.SENT);
-        assertThat(event.getSentAt()).isAfterOrEqualTo(before);
+        assertThat(event.getSentAt())
+                .isAfterOrEqualTo(before)
+                .isBeforeOrEqualTo(after);
         assertThat(event.getLockedBy()).isNull();
         assertThat(event.getLockedAt()).isNull();
     }
@@ -129,7 +133,6 @@ class OutboxEventTest {
     @Test
     void fullRetryThenErrorFlow() {
         OutboxEvent event = makeNew();
-        // 3 retries then error
         for (int i = 0; i < 3; i++) {
             event.markProcessing("worker");
             event.markRetry(Instant.now().plusSeconds(5));

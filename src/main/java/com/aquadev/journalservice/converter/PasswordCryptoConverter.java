@@ -2,6 +2,7 @@ package com.aquadev.journalservice.converter;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import jakarta.persistence.PersistenceException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -23,13 +24,15 @@ public class PasswordCryptoConverter implements AttributeConverter<String, Strin
     private static final int GCM_IV_LENGTH = 12;
     private static final int GCM_TAG_LENGTH = 128;
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     @Override
     public String convertToDatabaseColumn(String attribute) {
         if (attribute == null) return null;
 
         try {
             byte[] iv = new byte[GCM_IV_LENGTH];
-            new SecureRandom().nextBytes(iv);
+            SECURE_RANDOM.nextBytes(iv);
 
             SecretKey key = new SecretKeySpec(secretKey.getBytes(), "AES");
             Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -42,7 +45,7 @@ public class PasswordCryptoConverter implements AttributeConverter<String, Strin
 
             return Base64.getEncoder().encodeToString(encryptedWithIv);
         } catch (Exception e) {
-            throw new RuntimeException("Encryption error", e);
+            throw new PersistenceException("Encryption error", e);
         }
     }
 
@@ -64,7 +67,7 @@ public class PasswordCryptoConverter implements AttributeConverter<String, Strin
 
             return new String(cipher.doFinal(encrypted));
         } catch (Exception e) {
-            throw new RuntimeException("Decryption error", e);
+            throw new PersistenceException("Decryption error", e);
         }
     }
 }
