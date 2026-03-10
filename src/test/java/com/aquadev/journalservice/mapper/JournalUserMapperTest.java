@@ -28,7 +28,7 @@ class JournalUserMapperTest {
         JournalUser entity = mapper.toEntity(source, 1L);
 
         assertThat(entity.getJournalUserId()).isEqualTo(1L);
-        assertThat(entity.getStreamId()).isEqualTo(2L);
+        assertThat(entity.getStreamId()).isEqualByComparingTo(2);
         assertThat(entity.getStreamName()).isEqualTo("Stream");
         assertThat(entity.getFullName()).isEqualTo("Name");
         assertThat(entity.getJournalGroups()).hasSize(1);

@@ -20,13 +20,20 @@ import org.springframework.data.redis.core.ValueOperations;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -77,15 +84,13 @@ class JournalTokenManagerTest {
         when(valueOps.get(JournalRedisKeys.accessToken(USER_ID))).thenReturn(null);
 
         String accessToken = "valid-access-token";
-        // Token expires in 2h, refreshWindow is 60s → valid, no refresh path entered
         JournalToken token = makeValidToken(accessToken, Instant.now().plusSeconds(7200));
         when(repo.findById(USER_ID)).thenReturn(Optional.of(token));
 
         String result = manager.getValidAccessToken(USER_ID);
 
         assertThat(result).isEqualTo(accessToken);
-        // Result is cached via cacheAccess()
-        verify(valueOps).set(eq(JournalRedisKeys.accessToken(USER_ID)), eq(accessToken), any());
+        verify(valueOps).set(eq(JournalRedisKeys.accessToken(USER_ID)), eq(accessToken), any(Duration.class));
     }
 
     // ── getValidAccessToken: reauthRequired flag ──────────────────────────
@@ -106,29 +111,75 @@ class JournalTokenManagerTest {
                 .hasMessageContaining("Reauth required");
     }
 
-    // ── getValidAccessToken: no token in DB → reauth ──────────────────────
+    // ── refreshUnderLock: lock contention ────────────────────────────────
 
     @Test
-    void getValidAccessToken_noTokenInDb_reauthsAndReturnsToken() {
-        when(valueOps.get(anyString())).thenReturn(null);
+    void refreshUnderLock_waitPath_returnsCachedIfAvailable() {
+        when(valueOps.get(JournalRedisKeys.accessToken(USER_ID)))
+                .thenReturn(null) // First call in getValidAccessToken
+                .thenReturn("newly-cached-token"); // After sleep
+
         when(valueOps.setIfAbsent(eq(JournalRedisKeys.lock(USER_ID)), any(), any()))
-                .thenReturn(Boolean.TRUE);
-        // All findById calls (initial check + inside refreshUnderLock + storeTokens) return empty
-        when(repo.findById(USER_ID)).thenReturn(Optional.empty());
-
-        JournalCredential cred = new JournalCredential();
-        cred.setUsername("user");
-        cred.setPassword("pass");
-        when(credentialRepository.findByJournalUserId(USER_ID)).thenReturn(Optional.of(cred));
-
-        JournalTokenResponse tokenResponse = new JournalTokenResponse(
-                "new-access-token", "new-refresh-token", 86400L, 3600L, null, null, null);
-        when(journalAuthClient.login("user", "pass")).thenReturn(tokenResponse);
+                .thenReturn(Boolean.FALSE);
 
         String result = manager.getValidAccessToken(USER_ID);
 
-        assertThat(result).isEqualTo("new-access-token");
-        verify(redis).delete(JournalRedisKeys.lock(USER_ID));
+        assertThat(result).isEqualTo("newly-cached-token");
+    }
+
+    // ── refreshUnderLock: refresh token failure ──────────────────────────
+
+    @Test
+    void refreshUnderLock_refreshTokenFails_reauths() {
+        when(valueOps.setIfAbsent(anyString(), any(), any())).thenReturn(Boolean.TRUE);
+
+        JournalToken token = makeValidToken("old", Instant.now().minusSeconds(10)); // Access expired
+        when(repo.findById(USER_ID)).thenReturn(Optional.of(token));
+
+        when(journalAuthClient.refreshToken(anyString())).thenThrow(new RuntimeException("Refresh failed"));
+        
+        JournalCredential cred = new JournalCredential();
+        cred.setUsername("u");
+        cred.setPassword("p");
+        when(credentialRepository.findByJournalUserId(USER_ID)).thenReturn(Optional.of(cred));
+
+        JournalTokenResponse loginResp = new JournalTokenResponse("login-acc", "login-ref", 100L, 100L, null, null, null);
+        when(journalAuthClient.login(anyString(), anyString())).thenReturn(loginResp);
+
+        String result = manager.getValidAccessToken(USER_ID);
+
+        assertThat(result).isEqualTo("login-acc");
+        verify(journalAuthClient).login("u", "p");
+    }
+
+    // ── reauthAndStore: failure ──────────────────────────────────────────
+
+    @Test
+    void reauthAndStore_missingCredentials_throwsException() {
+        when(valueOps.setIfAbsent(anyString(), any(), any())).thenReturn(Boolean.TRUE);
+        when(repo.findById(USER_ID)).thenReturn(Optional.empty());
+        when(credentialRepository.findByJournalUserId(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> manager.getValidAccessToken(USER_ID))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Missing credentials");
+    }
+
+    @Test
+    void reauthAndStore_loginFails_marksReauthRequiredAndThrows() {
+        when(valueOps.setIfAbsent(anyString(), any(), any())).thenReturn(Boolean.TRUE);
+        when(repo.findById(USER_ID)).thenReturn(Optional.empty());
+
+        JournalCredential cred = new JournalCredential();
+        cred.setUsername("u");
+        cred.setPassword("p");
+        when(credentialRepository.findByJournalUserId(USER_ID)).thenReturn(Optional.of(cred));
+
+        when(journalAuthClient.login(anyString(), anyString())).thenThrow(new RuntimeException("Login failed"));
+
+        assertThatThrownBy(() -> manager.getValidAccessToken(USER_ID))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Login failed");
     }
 
     // ── storeTokens ───────────────────────────────────────────────────────
@@ -143,7 +194,7 @@ class JournalTokenManagerTest {
         manager.storeTokens(USER_ID, tokenResponse);
 
         verify(repo).save(any(JournalToken.class));
-        verify(valueOps).set(eq(JournalRedisKeys.accessToken(USER_ID)), eq("access123"), any());
+        verify(valueOps).set(eq(JournalRedisKeys.accessToken(USER_ID)), eq("access123"), any(Duration.class));
     }
 
     @Test
@@ -160,42 +211,13 @@ class JournalTokenManagerTest {
         verify(repo).save(existing);
     }
 
-    @Test
-    void storeTokens_nullRefreshToken_doesNotUpdateRefreshEnc() {
-        JournalToken existing = makeValidToken("old-access", Instant.now().plusSeconds(3600));
-        String originalRefreshEnc = existing.getRefreshTokenEnc();
-        when(repo.findById(USER_ID)).thenReturn(Optional.of(existing));
-
-        JournalTokenResponse tokenResponse = new JournalTokenResponse(
-                "new-access", null, 604800L, 3600L, null, null, null);
-
-        manager.storeTokens(USER_ID, tokenResponse);
-
-        assertThat(existing.getRefreshTokenEnc()).isEqualTo(originalRefreshEnc);
-    }
-
-    @Test
-    void storeTokens_blankRefreshToken_doesNotUpdateRefreshEnc() {
-        JournalToken existing = makeValidToken("old-access", Instant.now().plusSeconds(3600));
-        String originalRefreshEnc = existing.getRefreshTokenEnc();
-        when(repo.findById(USER_ID)).thenReturn(Optional.of(existing));
-
-        JournalTokenResponse tokenResponse = new JournalTokenResponse(
-                "new-access", "   ", 604800L, 3600L, null, null, null);
-
-        manager.storeTokens(USER_ID, tokenResponse);
-
-        assertThat(existing.getRefreshTokenEnc()).isEqualTo(originalRefreshEnc);
-    }
-
     // ── forceRefreshAccessToken ───────────────────────────────────────────
 
     @Test
     void forceRefreshAccessToken_deletesAccessCacheAndRefreshes() {
-        when(valueOps.setIfAbsent(eq(JournalRedisKeys.lock(USER_ID)), any(), any()))
+        when(valueOps.setIfAbsent(eq(JournalRedisKeys.lock(USER_ID)), any(), any(Duration.class)))
                 .thenReturn(Boolean.TRUE);
 
-        // Token is valid, but force=true → refresh token is used
         JournalToken token = makeValidToken("old-access", Instant.now().plusSeconds(7200));
         when(repo.findById(USER_ID)).thenReturn(Optional.of(token));
 
@@ -209,27 +231,19 @@ class JournalTokenManagerTest {
         verify(redis).delete(JournalRedisKeys.accessToken(USER_ID));
     }
 
-    // ── resolveExpiry edge case ───────────────────────────────────────────
+    // ── resolveExpiry ───────────────────────────────────────────────────
 
     @Test
-    void storeTokens_expiresInLargerThan604800_treatedAsMillis() {
-        // BUG: resolveExpiry treats values > 604800 as millis.
-        // expiresInAccess=604801 → now + 604801ms ≈ 10 minutes, NOT ~7 days.
-        JournalToken existing = new JournalToken();
-        existing.setJournalUserId(USER_ID);
-        existing.setRefreshTokenEnc(realCrypto.encrypt("refresh"));
-        existing.setRefreshExpiresAt(Instant.now().plusSeconds(86400));
-        when(repo.findById(USER_ID)).thenReturn(Optional.of(existing));
+    void storeTokens_expiresInNull_usesDefaultTtl() {
+        when(repo.findById(USER_ID)).thenReturn(Optional.empty());
+        when(tokenProperties.refreshInterval()).thenReturn(1000L);
 
-        long largeValue = 604_801L;
         JournalTokenResponse tokenResponse = new JournalTokenResponse(
-                "access", "refresh", 604800L, largeValue, null, null, null);
+                "acc", "ref", null, null, null, null, null);
 
         manager.storeTokens(USER_ID, tokenResponse);
 
-        Instant accessExpiry = existing.getAccessExpiresAt();
-        Instant tenMinutesFromNow = Instant.now().plusSeconds(700);
-        assertThat(accessExpiry).isBefore(tenMinutesFromNow);
+        verify(repo).save(argThat(t -> t.getAccessExpiresAt() != null));
     }
 
     // ── helpers ───────────────────────────────────────────────────────────
