@@ -70,7 +70,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test jacocoTestReport
         env:
           GPR_USER: ${{ github.actor }}
           GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGE }}
@@ -81,6 +81,7 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     needs: [ test ]
     timeout-minutes: 30
 

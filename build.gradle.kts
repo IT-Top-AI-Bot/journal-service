@@ -1,5 +1,6 @@
 plugins {
     java
+    jacoco
     id("org.sonarqube") version "7.2.2.6593"
     id("org.springframework.boot") version "4.0.3"
     id("io.spring.dependency-management") version "1.1.7"
@@ -15,10 +16,15 @@ java {
     }
 }
 
+jacoco {
+    toolVersion = "0.8.14"
+}
+
 sonar {
     properties {
         property("sonar.projectKey", "aquadev-pet-projects_it-top-ai-backend")
         property("sonar.organization", "aquadev-pet-projects")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml")
     }
 }
 
@@ -81,4 +87,15 @@ dependencyManagement {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
 }
