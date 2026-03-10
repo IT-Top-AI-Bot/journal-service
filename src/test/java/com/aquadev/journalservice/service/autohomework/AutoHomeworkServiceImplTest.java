@@ -279,19 +279,14 @@ class AutoHomeworkServiceImplTest {
         User user = buildUserWithJournalUser(Set.of(group));
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of()); // Here empty is intended
 
-        JournalHomeworkResponse hw1 = makeHomework(1, 10, 3, 10, null);
-        JournalHomeworkResponse hw2 = makeHomework(2, 20, 3, 10, null);
-
-        // This mock won't actually be called due to early exit, but leaving it is harmless
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
-                .thenReturn(List.of(hw1, hw2));
-
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
                 .call(() -> {
                     service.checkAndDispatch(settings);
                     return null;
                 });
 
+        verify(journalClient, never()).getHomeworks(anyInt(), anyInt(), anyInt(), anyInt());
+        verify(settingsRepository, never()).save(any());
         verify(outboxEventPublisher, never()).publish(any(), any(), any(), any(), any());
     }
 
@@ -302,12 +297,30 @@ class AutoHomeworkServiceImplTest {
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt()))
-                .thenThrow(HttpClientErrorException.Unauthorized.class);
+                .thenThrow(new HttpClientErrorException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
         service.checkAndDispatch(settings);
 
         assertThat(settings.isEnabled()).isFalse();
         verify(settingsRepository).save(settings);
+    }
+
+    @Test
+    void checkAndDispatch_journalClientReturnsNull_returnsEmptyStream() {
+        JournalGroup group = new JournalGroup(null, 10L, "Group A");
+        User user = buildUserWithJournalUser(Set.of(group));
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L));
+
+        when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt()))
+                .thenReturn(null);
+
+        ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
+                .call(() -> {
+                    service.checkAndDispatch(settings);
+                    return null;
+                });
+
+        verify(outboxEventPublisher, never()).publish(any(), any(), any(), any(), any());
     }
 
     @Test
