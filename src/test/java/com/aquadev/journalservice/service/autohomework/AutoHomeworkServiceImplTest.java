@@ -311,6 +311,21 @@ class AutoHomeworkServiceImplTest {
     }
 
     @Test
+    void checkAndDispatch_illegalStateError_doesNotDisableAutoHomework() {
+        JournalGroup group = new JournalGroup(null, 10L, "Group A");
+        User user = buildUserWithJournalUser(Set.of(group));
+        UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L));
+
+        when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt()))
+                .thenThrow(new IllegalStateException("Some internal error"));
+
+        service.checkAndDispatch(settings);
+
+        assertThat(settings.isEnabled()).isTrue();
+        verify(settingsRepository, never()).save(settings);
+    }
+
+    @Test
     void checkAndDispatch_homeworkUrlBuiltFromFilePath() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));

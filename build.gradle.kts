@@ -22,8 +22,8 @@ jacoco {
 
 sonar {
     properties {
-        property("sonar.projectKey", "aquadev-pet-projects_it-top-ai-backend")
-        property("sonar.organization", "aquadev-pet-projects")
+        property("sonar.projectKey", "IT-Top-AI-Bot_backend")
+        property("sonar.organization", "it-top-ai-bot")
         property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml")
     }
 }

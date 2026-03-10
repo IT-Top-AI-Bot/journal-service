@@ -121,10 +121,12 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                 log.info("Auto homework check completed for user telegramId={}", telegramId);
                 return null;
             });
-        } catch (HttpClientErrorException.Unauthorized | IllegalStateException e) {
+        } catch (HttpClientErrorException.Unauthorized e) {
             log.warn("Auth failure for user telegramId={}, disabling auto-homework: {}", telegramId, e.getMessage());
             settings.setEnabled(false);
             settingsRepository.save(settings);
+        } catch (IllegalStateException e) {
+            log.error("Illegal state in auto homework check for user telegramId={}: {}", telegramId, e.getMessage());
         } catch (Exception e) {
             log.error("Error in auto homework check for user telegramId={}: {}", telegramId, e.getMessage(), e);
         }

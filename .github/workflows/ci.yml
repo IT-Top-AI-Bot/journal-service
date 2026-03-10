@@ -12,6 +12,7 @@ jobs:
     permissions:
       contents: read
       packages: read
+      pull-requests: read
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
