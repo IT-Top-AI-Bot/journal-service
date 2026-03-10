@@ -2,9 +2,12 @@ package com.aquadev.journalservice.service.outbox;
 
 import com.aquadev.journalservice.model.OutboxEvent;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -27,14 +30,21 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OutboxRelayServiceTest {
 
-    @Mock OutboxRelayDao outboxRelayDao;
-    @Mock KafkaTemplate<String, String> outboxKafkaTemplate;
+    @Mock
+    OutboxRelayDao outboxRelayDao;
+
+    @Mock
+    KafkaTemplate<String, String> outboxKafkaTemplate;
 
     OutboxRelayService relayService;
 
+    @BeforeEach
     void setUp() {
         relayService = new OutboxRelayService(outboxRelayDao, outboxKafkaTemplate);
     }
+
+    @Captor
+    private ArgumentCaptor<ProducerRecord<String, String>> captor;
 
     // ── relay: no events ──────────────────────────────────────────────────────
 
@@ -53,7 +63,7 @@ class OutboxRelayServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void relay_oneEvent_sendsToKafkaAndMarksSent() throws Exception {
+    void relay_oneEvent_sendsToKafkaAndMarksSent() {
         setUp();
         OutboxEvent event = makeEvent("my-topic", "my-key", "{\"x\":1}", "HomeworkExecution", "Created");
 
@@ -84,27 +94,25 @@ class OutboxRelayServiceTest {
     // ── relay: Kafka record headers ───────────────────────────────────────────
 
     @Test
-    @SuppressWarnings("unchecked")
-    void relay_producerRecordHasCorrectTopicAndPayload() throws Exception {
+    void relay_producerRecordHasCorrectTopicAndPayload() {
         setUp();
         OutboxEvent event = makeEvent("exec-topic", "exec-key", "{\"id\":\"123\"}", "HomeworkExecution", "Created");
 
         when(outboxRelayDao.lockAndMarkProcessing()).thenReturn(List.of(event));
-        when(outboxKafkaTemplate.send(any(ProducerRecord.class)))
+        when(outboxKafkaTemplate.send(ArgumentMatchers.<ProducerRecord<String, String>>any()))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         relayService.relay();
 
-        ArgumentCaptor<ProducerRecord<String, String>> captor = ArgumentCaptor.forClass(ProducerRecord.class);
         verify(outboxKafkaTemplate).send(captor.capture());
 
-        ProducerRecord<String, String> record = captor.getValue();
-        assertThat(record.topic()).isEqualTo("exec-topic");
-        assertThat(record.key()).isEqualTo("exec-key");
-        assertThat(record.value()).isEqualTo("{\"id\":\"123\"}");
-        assertThat(record.headers().lastHeader("eventType")).isNotNull();
-        assertThat(new String(record.headers().lastHeader("eventType").value())).isEqualTo("Created");
-        assertThat(new String(record.headers().lastHeader("aggregateType").value())).isEqualTo("HomeworkExecution");
+        ProducerRecord<String, String> producerRecord = captor.getValue();
+        assertThat(producerRecord.topic()).isEqualTo("exec-topic");
+        assertThat(producerRecord.key()).isEqualTo("exec-key");
+        assertThat(producerRecord.value()).isEqualTo("{\"id\":\"123\"}");
+        assertThat(producerRecord.headers().lastHeader("eventType")).isNotNull();
+        assertThat(new String(producerRecord.headers().lastHeader("eventType").value())).isEqualTo("Created");
+        assertThat(new String(producerRecord.headers().lastHeader("aggregateType").value())).isEqualTo("HomeworkExecution");
     }
 
     // ── relay: multiple events ────────────────────────────────────────────────

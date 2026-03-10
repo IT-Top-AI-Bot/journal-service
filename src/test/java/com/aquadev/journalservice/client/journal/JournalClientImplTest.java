@@ -60,7 +60,7 @@ class JournalClientImplTest {
     }
 
     @Test
-    void getCountHomework_success() throws Exception {
+    void getCountHomework_success() {
         // Use JSON string to ensure we test deserialization correctly
         String json = """
                 [
@@ -75,8 +75,8 @@ class JournalClientImplTest {
         List<JournalCountHomeworkResponse> result = journalClient.getCountHomework();
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).counterTypeName()).isEqualTo(JournalHomeworkStatus.EXPIRED);
-        assertThat(result.get(0).counter()).isEqualTo(3);
+        assertThat(result.getFirst().counterTypeName()).isEqualTo(JournalHomeworkStatus.EXPIRED);
+        assertThat(result.getFirst().counter()).isEqualTo(3);
     }
 
     @Test

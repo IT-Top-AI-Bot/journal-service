@@ -8,7 +8,8 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TokenCryptoTest {
 
@@ -70,7 +71,7 @@ class TokenCryptoTest {
     @Test
     void encrypt_emptyString_roundtripsCorrectly() {
         String encrypted = crypto.encrypt("");
-        assertThat(crypto.decrypt(encrypted)).isEqualTo("");
+        assertThat(crypto.decrypt(encrypted)).isEmpty();
     }
 
     @Test

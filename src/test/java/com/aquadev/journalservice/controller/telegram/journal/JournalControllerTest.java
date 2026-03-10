@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -112,7 +111,7 @@ class JournalControllerTest {
                 1, 10, 20, 30, "Teacher", "Theme",
                 null, null, null, null, null, null,
                 "Math", 0, 0, null, null, null);
-        when(journalService.getHomeworksForUser(eq(0), eq(0), eq(1))).thenReturn(List.of(hw));
+        when(journalService.getHomeworksForUser(0, 0, 1)).thenReturn(List.of(hw));
 
         mockMvc.perform(get("/api/v1/telegram/journal/homework")
                         .header(HEADER, "12345")

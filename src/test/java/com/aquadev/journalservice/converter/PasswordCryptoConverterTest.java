@@ -22,8 +22,9 @@ class PasswordCryptoConverterTest {
         String password = "my-secret-password";
         String encrypted = converter.convertToDatabaseColumn(password);
 
-        assertThat(encrypted).isNotNull();
-        assertThat(encrypted).isNotEqualTo(password);
+        assertThat(encrypted)
+                .isNotNull()
+                .isNotEqualTo(password);
     }
 
     @Test

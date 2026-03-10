@@ -29,7 +29,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -55,7 +54,7 @@ class UserServiceImplTest {
     // ── getMe ─────────────────────────────────────────────────────────────────
 
     @Test
-    void getMe_returnUserFromContext() throws Exception {
+    void getMe_returnUserFromContext() {
         User user = buildUser();
         when(userRepository.findByTelegramId(TELEGRAM_ID)).thenReturn(Optional.of(user));
 
@@ -87,7 +86,7 @@ class UserServiceImplTest {
     // ── createUser ────────────────────────────────────────────────────────────
 
     @Test
-    void createUser_success_savesAndReturnsUser() throws Exception {
+    void createUser_success_savesAndReturnsUser() {
         when(userRepository.existsByTelegramId(TELEGRAM_ID)).thenReturn(false);
 
         JournalTokenResponse tokenResponse = new JournalTokenResponse(
@@ -100,7 +99,8 @@ class UserServiceImplTest {
 
         JournalUserResponse journalUserResponse = mock(JournalUserResponse.class);
         when(journalClient.getCurrentUser()).thenReturn(journalUserResponse);
-        when(journalUserMapper.toEntity(eq(journalUserResponse), eq(777L))).thenReturn(new JournalUser());
+
+        when(journalUserMapper.toEntity(journalUserResponse, 777L)).thenReturn(new JournalUser());
 
         when(userRepository.save(user)).thenReturn(user);
 
@@ -110,38 +110,46 @@ class UserServiceImplTest {
                 .call(() -> userService.createUser(request));
 
         assertThat(result).isSameAs(user);
-        verify(journalTokenManager).storeTokens(eq(777L), eq(tokenResponse));
+
+        verify(journalTokenManager).storeTokens(777L, tokenResponse);
         verify(journalUserIdResolver).put(TELEGRAM_ID, 777L);
         verify(userRepository).save(user);
     }
 
     @Test
-    void createUser_alreadyExists_throwsUserAlreadyExistException() throws Exception {
+    void createUser_alreadyExists_throwsUserAlreadyExistException() {
+        // Arrange
         when(userRepository.existsByTelegramId(TELEGRAM_ID)).thenReturn(true);
-
         CreateUserRequest request = new CreateUserRequest("juser", "jpass");
 
+        var executionContext = ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID);
+
+        // Act & Assert
         assertThatThrownBy(() ->
-                ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                        .call(() -> userService.createUser(request))
-        ).isInstanceOf(UserAlreadyExistException.class)
+                executionContext.call(() -> userService.createUser(request))
+        )
+                .isInstanceOf(UserAlreadyExistException.class)
                 .hasMessageContaining(String.valueOf(TELEGRAM_ID));
 
         verifyNoInteractions(journalAuthClient);
     }
 
     @Test
-    void createUser_journalLoginFails_exceptionPropagates() throws Exception {
+    void createUser_journalLoginFails_exceptionPropagates() {
+        // Arrange
         when(userRepository.existsByTelegramId(TELEGRAM_ID)).thenReturn(false);
         when(journalAuthClient.login(any(), any()))
                 .thenThrow(new RuntimeException("Unauthorized"));
 
         CreateUserRequest request = new CreateUserRequest("bad", "creds");
 
+        var executionContext = ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID);
+
+        // Act & Assert
         assertThatThrownBy(() ->
-                ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                        .call(() -> userService.createUser(request))
-        ).isInstanceOf(RuntimeException.class)
+                executionContext.call(() -> userService.createUser(request))
+        )
+                .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Unauthorized");
 
         verify(userRepository, never()).save(any());

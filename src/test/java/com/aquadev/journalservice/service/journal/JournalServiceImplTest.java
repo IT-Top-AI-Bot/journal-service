@@ -8,7 +8,10 @@ import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.exception.domain.user.UserNotFoundException;
 import com.aquadev.journalservice.mapper.HomeworkExecutionMapper;
-import com.aquadev.journalservice.model.*;
+import com.aquadev.journalservice.model.HomeworkExecution;
+import com.aquadev.journalservice.model.JournalGroup;
+import com.aquadev.journalservice.model.JournalUser;
+import com.aquadev.journalservice.model.User;
 import com.aquadev.journalservice.repository.HomeworkExecutionRepository;
 import com.aquadev.journalservice.repository.UserRepository;
 import com.aquadev.journalservice.service.outbox.OutboxEventPublisher;
@@ -23,9 +26,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JournalServiceImplTest {
@@ -60,23 +68,30 @@ class JournalServiceImplTest {
 
     @Test
     void getHomeworksForUser_userNotFound_throwsUserNotFoundException() {
+        // Arrange
         when(userRepository.findByTelegramId(TELEGRAM_ID)).thenReturn(Optional.empty());
 
+        var scopedValue = ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID);
+
+        // Act & Assert
         assertThatThrownBy(() ->
-                ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                        .call(() -> journalService.getHomeworksForUser(1, null, null))
+                scopedValue.call(() -> journalService.getHomeworksForUser(1, null, null))
         ).isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
     void getHomeworksForUser_noGroup_throwsIllegalArgument() {
+        // Arrange
         User user = buildUserWithNoGroups();
         when(userRepository.findByTelegramId(TELEGRAM_ID)).thenReturn(Optional.of(user));
 
+        var scopedContext = ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID);
+
+        // Act & Assert
         assertThatThrownBy(() ->
-                ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                        .call(() -> journalService.getHomeworksForUser(1, null, null))
-        ).isInstanceOf(IllegalArgumentException.class)
+                scopedContext.call(() -> journalService.getHomeworksForUser(1, null, null))
+        )
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Group not found");
     }
 
@@ -109,13 +124,18 @@ class JournalServiceImplTest {
 
     @Test
     void executeHomework_userNotFound_throwsUserNotFoundException() {
+        // Arrange
         when(userRepository.findByTelegramId(TELEGRAM_ID)).thenReturn(Optional.empty());
 
+        var executionContext = ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID);
+        var request = new HomeworkExecutionRequest();
+
+        // Act & Assert
         assertThatThrownBy(() ->
-                ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
-                        .call(() -> journalService.executeHomework(new HomeworkExecutionRequest()))
+                executionContext.call(() -> journalService.executeHomework(request))
         ).isInstanceOf(UserNotFoundException.class);
 
+        // Дополнительная проверка безопасности
         verifyNoInteractions(outboxEventPublisher);
     }
 
