@@ -12,21 +12,22 @@ jobs:
     permissions:
       contents: read
       packages: read
+      pull-requests: read
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: temurin
           java-version: "25"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@f236b35da9d031e13b1005234ebe4392ed54c580 # v5.0.0
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
@@ -38,7 +39,7 @@ jobs:
           GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGE }}
 
       - name: Upload compiled JAR
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: app-build
           path: build/libs/*.jar
@@ -55,23 +56,33 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: temurin
           java-version: "25"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@f236b35da9d031e13b1005234ebe4392ed54c580 # v5.0.0
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Run tests
-        run: ./gradlew test
+      - name: Run tests and generate JaCoCo report
+        run: ./gradlew test jacocoTestReport --info
         env:
+          GPR_USER: ${{ github.actor }}
+          GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGE }}
+
+      - name: Run SonarCloud Analysis
+        if: env.SONAR_TOKEN != '' && env.GPR_API_KEY != ''
+        run: ./gradlew sonar --info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GPR_USER: ${{ github.actor }}
           GPR_API_KEY: ${{ secrets.PAT_READ_PACKAGE }}
 
@@ -81,25 +92,26 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     needs: [ test ]
     timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Download compiled JAR
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
         with:
           name: app-build
           path: build/libs/
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Login to GitHub Container Registry
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-        uses: docker/login-action@v4
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -107,7 +119,7 @@ jobs:
 
       - name: Docker metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0
         with:
           images: ghcr.io/${{ github.repository_owner }}/journal-service
           tags: |
@@ -115,7 +127,7 @@ jobs:
             type=sha,format=short
 
       - name: Build and push image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
           context: .
           file: ./Dockerfile

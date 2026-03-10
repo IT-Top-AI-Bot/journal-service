@@ -1,13 +1,13 @@
 package com.aquadev.journalservice.service.autohomework;
 
+import com.aquadev.commonlibs.HomeworkExecutionEvent;
+import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.journal.JournalApiProperties;
 import com.aquadev.journalservice.config.kafka.KafkaTopicProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
 import com.aquadev.journalservice.dto.request.UpdateAutoHomeworkSettingsRequest;
 import com.aquadev.journalservice.dto.response.AutoHomeworkSettingsResponse;
-import com.aquadev.commonlibs.HomeworkExecutionEvent;
-import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkStatus;
 import com.aquadev.journalservice.exception.domain.user.UserNotFoundException;
@@ -40,17 +40,18 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
 
     private final JournalClient journalClient;
     private final UserRepository userRepository;
-    private final HomeworkExecutionRepository homeworkExecutionRepository;
-    private final UserAutoHomeworkSettingsRepository settingsRepository;
-    private final OutboxEventPublisher outboxEventPublisher;
     private final KafkaTopicProperties kafkaProperties;
     private final JournalApiProperties journalApiProperties;
+    private final OutboxEventPublisher outboxEventPublisher;
+    private final UserAutoHomeworkSettingsRepository settingsRepository;
+    private final HomeworkExecutionRepository homeworkExecutionRepository;
 
     @Override
     @Transactional(readOnly = true)
     public AutoHomeworkSettingsResponse getSettings(Long telegramId) {
         User user = userRepository.findByTelegramId(telegramId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + telegramId));
+
         return settingsRepository.findByUserId(user.getId())
                 .map(s -> new AutoHomeworkSettingsResponse(s.isEnabled(), s.getLastCheckedAt(), s.getSpecIds()))
                 .orElse(new AutoHomeworkSettingsResponse(false, null, Set.of()));
@@ -61,15 +62,24 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
     public AutoHomeworkSettingsResponse updateSettings(Long telegramId, UpdateAutoHomeworkSettingsRequest request) {
         User user = userRepository.findByTelegramId(telegramId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + telegramId));
+
         UserAutoHomeworkSettings settings = settingsRepository.findByUserId(user.getId())
                 .orElseGet(() -> UserAutoHomeworkSettings.builder().user(user).build());
+
         settings.setEnabled(request.enabled());
         settings.getSpecIds().clear();
+
         if (request.specIds() != null) {
             settings.getSpecIds().addAll(request.specIds());
         }
+
         settings = settingsRepository.save(settings);
-        return new AutoHomeworkSettingsResponse(settings.isEnabled(), settings.getLastCheckedAt(), settings.getSpecIds());
+
+        return new AutoHomeworkSettingsResponse(
+                settings.isEnabled(),
+                settings.getLastCheckedAt(),
+                settings.getSpecIds()
+        );
     }
 
     @Override
@@ -77,8 +87,10 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
     public void checkAndDispatch(UserAutoHomeworkSettings settings) {
         User user = settings.getUser();
         Long telegramId = user.getTelegramId();
+
         try {
             ScopedValue.where(TelegramUserContext.TG_USER_ID, telegramId).call(() -> {
+
                 Long groupId = user.getJournalUser().getJournalGroups().stream()
                         .map(JournalGroup::getJournalGroupId)
                         .findFirst()
@@ -89,17 +101,17 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                     return null;
                 }
 
-                List<JournalHomeworkResponse> noneHomeworks =
-                        journalClient.getHomeworks(1, JournalHomeworkStatus.NOT_COMPLETED.getId(), 1, groupId.intValue());
-                List<JournalHomeworkResponse> expiredHomeworks =
-                        journalClient.getHomeworks(1, JournalHomeworkStatus.EXPIRED.getId(), 1, groupId.intValue());
-
                 Set<Long> specIds = settings.getSpecIds();
+                if (specIds == null || specIds.isEmpty()) {
+                    log.debug("No specIds configured for telegramId={}, skipping dispatch", telegramId);
+                    return null;
+                }
 
                 Stream.concat(
-                        noneHomeworks != null ? noneHomeworks.stream() : Stream.empty(),
-                        expiredHomeworks != null ? expiredHomeworks.stream() : Stream.empty()
-                ).filter(hw -> specIds.isEmpty() || specIds.contains(hw.idSpec().longValue()))
+                                getHomeworks(JournalHomeworkStatus.NOT_COMPLETED, groupId),
+                                getHomeworks(JournalHomeworkStatus.EXPIRED, groupId)
+                        )
+                        .filter(hw -> specIds.contains(hw.idSpec().longValue()))
                         .filter(hw -> !homeworkExecutionRepository.existsByUserAndHomeworkId(user, hw.id().longValue()))
                         .forEach(hw -> createAndPublish(hw, user));
 
@@ -109,20 +121,37 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                 log.info("Auto homework check completed for user telegramId={}", telegramId);
                 return null;
             });
-        } catch (HttpClientErrorException.Unauthorized | IllegalStateException e) {
+        } catch (HttpClientErrorException.Unauthorized e) {
             log.warn("Auth failure for user telegramId={}, disabling auto-homework: {}", telegramId, e.getMessage());
             settings.setEnabled(false);
             settingsRepository.save(settings);
+        } catch (IllegalStateException e) {
+            log.error("Illegal state in auto homework check for user telegramId={}: {}", telegramId, e.getMessage());
         } catch (Exception e) {
             log.error("Error in auto homework check for user telegramId={}: {}", telegramId, e.getMessage(), e);
         }
     }
 
+    private Stream<JournalHomeworkResponse> getHomeworks(JournalHomeworkStatus status, Long groupId) {
+        List<JournalHomeworkResponse> homeworks = journalClient.getHomeworks(
+                1,
+                status.getId(),
+                1,
+                groupId.intValue()
+        );
+
+        return homeworks != null ? homeworks.stream() : Stream.empty();
+    }
+
     private void createAndPublish(JournalHomeworkResponse hw, User user) {
+
         String filePath = hw.filePath();
         String homeworkUrl = null;
+
         if (filePath != null) {
-            homeworkUrl = filePath.startsWith("http") ? filePath : journalApiProperties.journalUrl() + filePath;
+            homeworkUrl = filePath.startsWith("http")
+                    ? filePath
+                    : journalApiProperties.journalUrl() + filePath;
         }
 
         HomeworkExecution execution = HomeworkExecution.builder()
@@ -166,7 +195,11 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                 )
         );
 
-        log.debug("Dispatched auto homework execution id={} homeworkId={} for user telegramId={}",
-                execution.getId(), execution.getHomeworkId(), user.getTelegramId());
+        log.debug(
+                "Dispatched auto homework execution id={} homeworkId={} for user telegramId={}",
+                execution.getId(),
+                execution.getHomeworkId(),
+                user.getTelegramId()
+        );
     }
 }

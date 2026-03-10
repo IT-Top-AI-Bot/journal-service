@@ -45,8 +45,8 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(
                 Instant.now(),
                 HttpStatus.TOO_MANY_REQUESTS.value(),
-                "Journal API rate limit exceeded, please retry later",
                 HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                "Journal API rate limit exceeded, please retry later",
                 request.getRequestURI(),
                 List.of()
         );
@@ -68,8 +68,8 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                "Error validating request data",
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Error validating request data",
                 request.getRequestURI(),
                 errors
         );
