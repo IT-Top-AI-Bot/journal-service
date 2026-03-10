@@ -297,7 +297,7 @@ class AutoHomeworkServiceImplTest {
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt()))
-                .thenThrow(new HttpClientErrorException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Unauthorized"));
+                .thenThrow(HttpClientErrorException.Unauthorized.create(org.springframework.http.HttpStatus.UNAUTHORIZED, "Unauthorized", null, null, null));
 
         service.checkAndDispatch(settings);
 
