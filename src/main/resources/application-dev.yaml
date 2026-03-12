@@ -1,3 +1,16 @@
 eureka:
   client:
     enabled: false
+
+auto-homework:
+  check-interval-ms: 300000 # 5 минут
+
+kafka:
+  homework-execution-topic: homework-execution-dev
+  homework-execution-result: homework-result-dev
+
+s3:
+  bucket: homeworks-solutions-dev
+
+server:
+  port: 8080
