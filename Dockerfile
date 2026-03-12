@@ -8,7 +8,7 @@ WORKDIR /application
 
 COPY build/libs/*.jar application.jar
 
-RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
+RUN java -Djarmode=tools -jar application.jar extract --layers --launcher --destination extracted
 
 ############################
 # Stage: final runtime image
@@ -21,10 +21,11 @@ USER spring:spring
 
 VOLUME ["/tmp"]
 
-COPY --from=extractor /application/extracted/lib/ lib/
-COPY --from=extractor /application/extracted/snapshot-lib/ snapshot-lib/
-COPY --from=extractor /application/extracted/app.jar app.jar
+COPY --from=extractor /application/extracted/dependencies/ ./
+COPY --from=extractor /application/extracted/spring-boot-loader/ ./
+COPY --from=extractor /application/extracted/snapshot-dependencies/ ./
+COPY --from=extractor /application/extracted/application/ ./
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
