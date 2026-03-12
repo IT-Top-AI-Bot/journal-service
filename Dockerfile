@@ -21,11 +21,10 @@ USER spring:spring
 
 VOLUME ["/tmp"]
 
-COPY --from=extractor /application/extracted/dependencies/ ./
-COPY --from=extractor /application/extracted/spring-boot-loader/ ./
-COPY --from=extractor /application/extracted/snapshot-dependencies/ ./
-COPY --from=extractor /application/extracted/application/ ./
+COPY --from=extractor /application/extracted/lib/ lib/
+COPY --from=extractor /application/extracted/snapshot-lib/ snapshot-lib/
+COPY --from=extractor /application/extracted/app.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
