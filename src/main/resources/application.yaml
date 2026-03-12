@@ -95,7 +95,7 @@ s3:
   bucket: homeworks-solutions
 
 crypto:
-  secret-key: ${ENCRYPTION_KEY:MySecretKey12345MySecretKey12345}
+  secret-key: ${ENCRYPTION_KEY}
 
 logging:
   level:
