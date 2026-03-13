@@ -9,12 +9,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PasswordCryptoConverterTest {
 
     private PasswordCryptoConverter converter;
-    private static final String SECRET_KEY = "12345678901234567890123456789012"; // 32 chars for AES-256
+    // 32 random bytes, Base64-encoded → valid AES-256 key
+    private static final String SECRET_KEY = java.util.Base64.getEncoder()
+            .encodeToString("12345678901234567890123456789012".getBytes());
 
     @BeforeEach
     void setUp() {
         converter = new PasswordCryptoConverter();
-        ReflectionTestUtils.setField(converter, "secretKey", SECRET_KEY);
+        ReflectionTestUtils.setField(converter, "secretKeyString", SECRET_KEY);
+        converter.init();
     }
 
     @Test
