@@ -34,7 +34,6 @@ configurations {
     }
 }
 
-
 repositories {
     mavenCentral()
     maven {
@@ -63,7 +62,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+    implementation("org.springframework.cloud:spring-cloud-starter-kubernetes-client-all")
     implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocVersion")
     implementation("io.github.resilience4j:resilience4j-spring-boot3")

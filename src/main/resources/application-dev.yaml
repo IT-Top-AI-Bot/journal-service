@@ -1,7 +1,3 @@
-eureka:
-  client:
-    enabled: false
-
 auto-homework:
   check-interval-ms: 300000 # 5 минут
 
