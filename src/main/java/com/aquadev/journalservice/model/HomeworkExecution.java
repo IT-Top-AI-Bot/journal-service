@@ -80,6 +80,9 @@ public class HomeworkExecution {
     @Column(name = "result_s3_key", length = 4096)
     private String resultS3Key;
 
+    @Column(name = "result_text", length = 4096)
+    private String resultText;
+
     @Column(name = "completed_at")
     private Instant completedAt;
 

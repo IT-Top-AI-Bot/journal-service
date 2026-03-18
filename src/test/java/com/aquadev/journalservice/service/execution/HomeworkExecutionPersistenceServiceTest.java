@@ -41,6 +41,7 @@ class HomeworkExecutionPersistenceServiceTest {
                 HomeworkExecutionStatus.DONE,
                 "s3-key",
                 null,
+                null,
                 now
         );
 
@@ -70,6 +71,7 @@ class HomeworkExecutionPersistenceServiceTest {
                 executionId,
                 HomeworkExecutionStatus.DONE,
                 "s3-key",
+                null,
                 null,
                 Instant.now()
         );

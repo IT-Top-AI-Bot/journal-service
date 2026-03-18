@@ -6,6 +6,7 @@ import com.aquadev.journalservice.dto.response.HomeworkExecutionResponse;
 import com.aquadev.journalservice.dto.response.JournalCountHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalScheduleResponse;
+import com.aquadev.journalservice.dto.response.JournalSpecResponse;
 import com.aquadev.journalservice.dto.response.JournalUserResponse;
 import com.aquadev.journalservice.mapper.HomeworkExecutionMapper;
 import com.aquadev.journalservice.service.journal.JournalService;
@@ -65,5 +66,11 @@ public class JournalControllerImpl implements JournalController {
     @GetMapping("/schedule/{date}")
     public List<JournalScheduleResponse> getScheduleByDate(@PathVariable LocalDate date) {
         return journalClient.getScheduleByDate(date);
+    }
+
+    @Override
+    @GetMapping("/group-specs")
+    public List<JournalSpecResponse> getGroupSpecs() {
+        return journalClient.getGroupSpecs();
     }
 }

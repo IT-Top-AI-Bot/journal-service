@@ -5,6 +5,7 @@ import com.aquadev.journalservice.dto.response.HomeworkExecutionResponse;
 import com.aquadev.journalservice.dto.response.JournalCountHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalScheduleResponse;
+import com.aquadev.journalservice.dto.response.JournalSpecResponse;
 import com.aquadev.journalservice.dto.response.JournalUserResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -40,4 +41,7 @@ public interface JournalController {
 
     @GetMapping("/schedule/{date}")
     List<JournalScheduleResponse> getScheduleByDate(@PathVariable LocalDate date);
+
+    @GetMapping("/group-specs")
+    List<JournalSpecResponse> getGroupSpecs();
 }

@@ -107,13 +107,14 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                     return null;
                 }
 
-                Stream.concat(
-                                getHomeworks(JournalHomeworkStatus.NOT_COMPLETED, groupId),
-                                getHomeworks(JournalHomeworkStatus.EXPIRED, groupId)
-                        )
-                        .filter(hw -> specIds.contains(hw.idSpec().longValue()))
-                        .filter(hw -> !homeworkExecutionRepository.existsByUserAndHomeworkId(user, hw.id().longValue()))
-                        .forEach(hw -> createAndPublish(hw, user));
+                for (Long specId : specIds) {
+                    Stream.concat(
+                                    getHomeworksBySpec(JournalHomeworkStatus.NOT_COMPLETED, groupId, specId),
+                                    getHomeworksBySpec(JournalHomeworkStatus.EXPIRED, groupId, specId)
+                            )
+                            .filter(hw -> !homeworkExecutionRepository.existsByUserAndHomeworkId(user, hw.id().longValue()))
+                            .forEach(hw -> createAndPublish(hw, user));
+                }
 
                 settings.setLastCheckedAt(Instant.now());
                 settingsRepository.save(settings);
@@ -132,12 +133,13 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
         }
     }
 
-    private Stream<JournalHomeworkResponse> getHomeworks(JournalHomeworkStatus status, Long groupId) {
+    private Stream<JournalHomeworkResponse> getHomeworksBySpec(JournalHomeworkStatus status, Long groupId, Long specId) {
         List<JournalHomeworkResponse> homeworks = journalClient.getHomeworks(
                 1,
                 status.getId(),
-                1,
-                groupId.intValue()
+                0,
+                groupId.intValue(),
+                specId.intValue()
         );
 
         return homeworks != null ? homeworks.stream() : Stream.empty();
@@ -191,7 +193,8 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                         execution.getTeacherFio(),
                         execution.getHomeworkUrl(),
                         execution.getOverdueTime(),
-                        execution.getCompletionTime()
+                        execution.getCompletionTime(),
+                        null
                 )
         );
 

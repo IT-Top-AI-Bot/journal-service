@@ -6,6 +6,7 @@ import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkStatus;
 import com.aquadev.journalservice.dto.response.JournalHomeworkUploadResponse;
 import com.aquadev.journalservice.dto.response.JournalScheduleResponse;
+import com.aquadev.journalservice.dto.response.JournalSpecResponse;
 import com.aquadev.journalservice.dto.response.JournalUserResponse;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +58,7 @@ public class JournalClientImpl implements JournalClient {
     }
 
     @Override
-    public List<JournalHomeworkResponse> getHomeworks(Integer page, Integer status, Integer type, Integer groupId) {
+    public List<JournalHomeworkResponse> getHomeworks(Integer page, Integer status, Integer type, Integer groupId, Integer specId) {
         return restClient.get()
                 .uri(uri -> uri
                         .path("/homework/operations/list")
@@ -65,6 +66,7 @@ public class JournalClientImpl implements JournalClient {
                         .queryParam("status", status)
                         .queryParam("type", type)
                         .queryParam("group_id", groupId)
+                        .queryParamIfPresent("spec_id", Optional.ofNullable(specId))
                         .build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {
@@ -83,7 +85,7 @@ public class JournalClientImpl implements JournalClient {
                     .body(JournalHomeworkEvaluationResponse.class);
 
             return Optional.ofNullable(response);
-        } catch (HttpClientErrorException.NotFound e) {
+        } catch (HttpClientErrorException.NotFound _) {
             return Optional.empty();
         }
     }
@@ -115,12 +117,35 @@ public class JournalClientImpl implements JournalClient {
     }
 
     @Override
+    public JournalHomeworkUploadResponse uploadHomeworkText(Long homeworkId, String text) {
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("id", homeworkId);
+        builder.part("text", text);
+
+        return restClient.post()
+                .uri("/homework/operations/create")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(builder.build())
+                .retrieve()
+                .body(JournalHomeworkUploadResponse.class);
+    }
+
+    @Override
     public List<JournalScheduleResponse> getScheduleByDate(LocalDate date) {
         return restClient.get()
                 .uri(uri -> uri
                         .path("/schedule/operations/get-month")
                         .queryParam("date-filter", date)
                         .build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {
+                });
+    }
+
+    @Override
+    public List<JournalSpecResponse> getGroupSpecs() {
+        return restClient.get()
+                .uri("/settings/group-specs")
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {
                 });

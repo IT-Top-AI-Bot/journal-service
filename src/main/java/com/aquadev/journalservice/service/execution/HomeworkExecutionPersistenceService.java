@@ -30,6 +30,7 @@ class HomeworkExecutionPersistenceService {
 
         execution.setStatus(event.status());
         execution.setResultS3Key(event.resultS3Key());
+        execution.setResultText(event.resultText());
         execution.setCompletedAt(event.createdAt());
 
         HomeworkExecution saved = homeworkExecutionRepository.save(execution);
