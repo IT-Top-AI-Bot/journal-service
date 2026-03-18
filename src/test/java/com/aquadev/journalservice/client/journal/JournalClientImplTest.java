@@ -23,6 +23,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.queryParam;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -80,14 +81,28 @@ class JournalClientImplTest {
     }
 
     @Test
-    void getHomeworks_success() throws Exception {
+    void getHomeworks_withoutSpecId_doesNotAddSpecIdParam() throws Exception {
         List<JournalHomeworkResponse> expected = List.of();
 
         mockServer.expect(requestTo(containsString("/homework/operations/list")))
                 .andExpect(queryParam("page", "1"))
+                .andExpect(requestTo(not(containsString("spec_id"))))
                 .andRespond(withSuccess(objectMapper.writeValueAsString(expected), MediaType.APPLICATION_JSON));
 
         List<JournalHomeworkResponse> result = journalClient.getHomeworks(1, 1, 1, 10, null);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getHomeworks_withSpecId_includesSpecIdParam() throws Exception {
+        List<JournalHomeworkResponse> expected = List.of();
+
+        mockServer.expect(requestTo(containsString("/homework/operations/list")))
+                .andExpect(queryParam("spec_id", "5"))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(expected), MediaType.APPLICATION_JSON));
+
+        List<JournalHomeworkResponse> result = journalClient.getHomeworks(1, 1, 1, 10, 5);
 
         assertThat(result).isEmpty();
     }

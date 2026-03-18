@@ -101,6 +101,65 @@ class HomeworkExecutionResultServiceImplTest {
     }
 
     @Test
+    void handleEvent_textResult_uploadsTextToJournal() {
+        UUID executionId = UUID.randomUUID();
+        HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
+                executionId,
+                HomeworkExecutionStatus.DONE,
+                null,
+                "Ответ на задание",
+                null,
+                Instant.now()
+        );
+
+        HomeworkExecution execution = new HomeworkExecution();
+        execution.setId(executionId);
+        execution.setHomeworkId(99L);
+        execution.setResultText("Ответ на задание");
+
+        when(persistenceService.updateExecutionBaseInfo(event))
+                .thenReturn(new ExecutionWithTelegramId(execution, 12345L));
+
+        resultService.handleEvent(event);
+
+        verify(journalClient).uploadHomeworkText(99L, "Ответ на задание");
+        verify(s3Client, never()).getObjectAsBytes(any(GetObjectRequest.class));
+    }
+
+    @Test
+    void handleEvent_journalUploadFails_setsStatusToFailed() {
+        UUID executionId = UUID.randomUUID();
+        HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
+                executionId,
+                HomeworkExecutionStatus.DONE,
+                "s3-key",
+                null,
+                null,
+                Instant.now()
+        );
+
+        HomeworkExecution execution = new HomeworkExecution();
+        execution.setId(executionId);
+        execution.setHomeworkId(55L);
+        execution.setResultS3Key("s3-key");
+
+        when(persistenceService.updateExecutionBaseInfo(event))
+                .thenReturn(new ExecutionWithTelegramId(execution, 12345L));
+        when(s3BucketProperties.bucket()).thenReturn("test-bucket");
+
+        byte[] content = "file".getBytes();
+        ResponseBytes<GetObjectResponse> responseBytes = mock(ResponseBytes.class);
+        when(responseBytes.asByteArray()).thenReturn(content);
+        when(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).thenReturn(responseBytes);
+        when(journalClient.uploadHomework(any(), any(), anyLong()))
+                .thenThrow(new RuntimeException("Journal unavailable"));
+
+        resultService.handleEvent(event);
+
+        verify(persistenceService).updateStatusToFailed(executionId);
+    }
+
+    @Test
     void handleEvent_s3Fails_setsStatusToFailed() {
         UUID executionId = UUID.randomUUID();
         HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
