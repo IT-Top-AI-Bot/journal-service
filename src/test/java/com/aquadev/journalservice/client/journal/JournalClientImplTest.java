@@ -6,6 +6,7 @@ import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkStatus;
 import com.aquadev.journalservice.dto.response.JournalHomeworkUploadResponse;
 import com.aquadev.journalservice.dto.response.JournalScheduleResponse;
+import com.aquadev.journalservice.dto.response.JournalSpecResponse;
 import com.aquadev.journalservice.dto.response.JournalUserResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -142,6 +143,32 @@ class JournalClientImplTest {
         JournalHomeworkUploadResponse result = journalClient.uploadHomework(1L, new ByteArrayInputStream(new byte[0]), 0);
 
         assertThat(result.id()).isEqualTo(1L);
+    }
+
+    @Test
+    void uploadHomeworkText_success() throws Exception {
+        JournalHomeworkUploadResponse expected = new JournalHomeworkUploadResponse(2L, null, null, null, 0, LocalDate.now(), "text answer", 0);
+
+        mockServer.expect(requestTo("/homework/operations/create"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(expected), MediaType.APPLICATION_JSON));
+
+        JournalHomeworkUploadResponse result = journalClient.uploadHomeworkText(1L, "Мой ответ");
+
+        assertThat(result.id()).isEqualTo(2L);
+    }
+
+    @Test
+    void getGroupSpecs_success() throws Exception {
+        List<JournalSpecResponse> expected = List.of(new JournalSpecResponse(10, "Math", "M"));
+
+        mockServer.expect(requestTo("/settings/group-specs"))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(expected), MediaType.APPLICATION_JSON));
+
+        List<JournalSpecResponse> result = journalClient.getGroupSpecs();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().id()).isEqualTo(10);
     }
 
     @Test
