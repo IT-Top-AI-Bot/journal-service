@@ -1,6 +1,5 @@
 package com.aquadev.journalservice.dto.request;
 
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,7 +21,4 @@ public class HomeworkExecutionRequest {
     private String comment;
     private String nameSpec;
     private String homeworkUrl;
-
-    @Size(max = 500)
-    private String homeworkText;
 }

@@ -79,7 +79,7 @@ public class JournalServiceImpl implements JournalService {
                         homeworkExecution.getHomeworkUrl(),
                         homeworkExecution.getOverdueTime(),
                         homeworkExecution.getCompletionTime(),
-                        homeworkExecution.getHomeworkText()
+                        null
                 )
         );
 

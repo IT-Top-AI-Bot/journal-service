@@ -21,8 +21,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,15 +44,15 @@ class HomeworkExecutionResultServiceImplTest {
     private HomeworkExecutionResultServiceImpl resultService;
 
     @Test
-    void handleEvent_success_processesUpload() throws Exception {
+    void handleEvent_success_processesUpload() {
         UUID executionId = UUID.randomUUID();
-        Instant now = Instant.now();
         HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
                 executionId,
                 HomeworkExecutionStatus.DONE,
                 "s3-key",
                 null,
-                now
+                null,
+                Instant.now()
         );
 
         HomeworkExecution execution = new HomeworkExecution();
@@ -74,12 +76,38 @@ class HomeworkExecutionResultServiceImplTest {
     }
 
     @Test
+    void handleEvent_failed_skipsJournalUpload() {
+        UUID executionId = UUID.randomUUID();
+        HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
+                executionId,
+                HomeworkExecutionStatus.FAILED,
+                null,
+                null,
+                "AI solver error",
+                Instant.now()
+        );
+
+        HomeworkExecution execution = new HomeworkExecution();
+        execution.setId(executionId);
+
+        when(persistenceService.updateExecutionBaseInfo(event))
+                .thenReturn(new ExecutionWithTelegramId(execution, 12345L));
+
+        resultService.handleEvent(event);
+
+        verify(journalClient, never()).uploadHomework(any(), any(), anyLong());
+        verify(journalClient, never()).uploadHomeworkText(any(), any());
+        verify(persistenceService, never()).updateStatusToFailed(any());
+    }
+
+    @Test
     void handleEvent_s3Fails_setsStatusToFailed() {
         UUID executionId = UUID.randomUUID();
         HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
                 executionId,
                 HomeworkExecutionStatus.DONE,
                 "s3-key",
+                null,
                 null,
                 Instant.now()
         );

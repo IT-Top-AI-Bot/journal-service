@@ -66,7 +66,7 @@ public class JournalClientImpl implements JournalClient {
                         .queryParam("status", status)
                         .queryParam("type", type)
                         .queryParam("group_id", groupId)
-                        .queryParam("spec_id", specId)
+                        .queryParamIfPresent("spec_id", Optional.ofNullable(specId))
                         .build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {

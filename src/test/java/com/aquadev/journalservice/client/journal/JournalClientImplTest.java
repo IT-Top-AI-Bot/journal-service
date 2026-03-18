@@ -87,7 +87,7 @@ class JournalClientImplTest {
                 .andExpect(queryParam("page", "1"))
                 .andRespond(withSuccess(objectMapper.writeValueAsString(expected), MediaType.APPLICATION_JSON));
 
-        List<JournalHomeworkResponse> result = journalClient.getHomeworks(1, 1, 1, 10);
+        List<JournalHomeworkResponse> result = journalClient.getHomeworks(1, 1, 1, 10, null);
 
         assertThat(result).isEmpty();
     }

@@ -6,7 +6,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpResponse;
 
@@ -33,7 +35,9 @@ class LoggingClientHttpRequestInterceptorTest {
     @Test
     void intercept_callsExecution() throws IOException {
         when(request.getURI()).thenReturn(URI.create("http://api"));
+        when(request.getMethod()).thenReturn(HttpMethod.GET);
         when(execution.execute(any(), any())).thenReturn(response);
+        when(response.getStatusCode()).thenReturn(HttpStatus.OK);
 
         interceptor.intercept(request, new byte[0], execution);
 

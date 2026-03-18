@@ -68,9 +68,6 @@ public class HomeworkExecution {
     @Column(name = "homework_url", length = 4096)
     private String homeworkUrl;
 
-    @Column(name = "homework_text", length = 500)
-    private String homeworkText;
-
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

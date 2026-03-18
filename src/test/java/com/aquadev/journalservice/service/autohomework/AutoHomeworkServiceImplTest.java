@@ -195,9 +195,9 @@ class AutoHomeworkServiceImplTest {
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, "http://example.com/hw.pdf");
-        when(journalClient.getHomeworks(1, JournalHomeworkStatus.NOT_COMPLETED.getId(), 1, 10))
+        when(journalClient.getHomeworks(1, JournalHomeworkStatus.NOT_COMPLETED.getId(), 0, 10, 5))
                 .thenReturn(List.of(hw));
-        when(journalClient.getHomeworks(1, JournalHomeworkStatus.EXPIRED.getId(), 1, 10))
+        when(journalClient.getHomeworks(1, JournalHomeworkStatus.EXPIRED.getId(), 0, 10, 5))
                 .thenReturn(List.of());
         when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(false);
         when(homeworkExecutionRepository.saveAndFlush(any())).thenAnswer(inv -> {
@@ -226,9 +226,9 @@ class AutoHomeworkServiceImplTest {
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, null);
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt(), anyInt()))
                 .thenReturn(List.of(hw));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt(), anyInt()))
                 .thenReturn(List.of());
         when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(true);
 
@@ -245,14 +245,13 @@ class AutoHomeworkServiceImplTest {
     void checkAndDispatch_specIdFilterApplied_onlyMatchingSpecIdsDispatched() {
         JournalGroup group = new JournalGroup(null, 10L, "Group A");
         User user = buildUserWithJournalUser(Set.of(group));
-        // Only specId=5 allowed
+        // Only specId=5 allowed — API is called per specId, so only spec-5 homeworks returned
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L));
 
         JournalHomeworkResponse matchingHw = makeHomework(1, 5, 3, 10, null);
-        JournalHomeworkResponse nonMatchingHw = makeHomework(2, 99, 3, 10, null);
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
-                .thenReturn(List.of(matchingHw, nonMatchingHw));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt(), anyInt()))
+                .thenReturn(List.of(matchingHw));
+        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt(), anyInt()))
                 .thenReturn(List.of());
         when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(false);
         when(homeworkExecutionRepository.saveAndFlush(any())).thenAnswer(inv -> {
@@ -269,7 +268,6 @@ class AutoHomeworkServiceImplTest {
                     return null;
                 });
 
-        // Only 1 matching homework dispatched
         verify(outboxEventPublisher, times(1)).publish(any(), any(), any(), any(), any());
     }
 
@@ -285,7 +283,7 @@ class AutoHomeworkServiceImplTest {
                     return null;
                 });
 
-        verify(journalClient, never()).getHomeworks(anyInt(), anyInt(), anyInt(), anyInt());
+        verify(journalClient, never()).getHomeworks(anyInt(), anyInt(), anyInt(), anyInt(), anyInt());
         verify(settingsRepository, never()).save(any());
         verify(outboxEventPublisher, never()).publish(any(), any(), any(), any(), any());
     }
@@ -296,7 +294,7 @@ class AutoHomeworkServiceImplTest {
         User user = buildUserWithJournalUser(Set.of(group));
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
-        when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt(), anyInt()))
                 .thenThrow(HttpClientErrorException.Unauthorized.create(org.springframework.http.HttpStatus.UNAUTHORIZED, "Unauthorized", null, null, null));
 
         service.checkAndDispatch(settings);
@@ -311,7 +309,7 @@ class AutoHomeworkServiceImplTest {
         User user = buildUserWithJournalUser(Set.of(group));
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L));
 
-        when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt(), anyInt()))
                 .thenReturn(null);
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
@@ -329,7 +327,7 @@ class AutoHomeworkServiceImplTest {
         User user = buildUserWithJournalUser(Set.of(group));
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L));
 
-        when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), anyInt(), anyInt(), anyInt(), anyInt()))
                 .thenThrow(new IllegalStateException("Some internal error"));
 
         service.checkAndDispatch(settings);
@@ -346,9 +344,9 @@ class AutoHomeworkServiceImplTest {
 
         // filePath is relative — should be prefixed with journalUrl
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, "/files/hw.pdf");
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt(), anyInt()))
                 .thenReturn(List.of(hw));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt(), anyInt()))
                 .thenReturn(List.of());
         when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(false);
         when(journalApiProperties.journalUrl()).thenReturn("https://journal.example.com");
@@ -377,9 +375,9 @@ class AutoHomeworkServiceImplTest {
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, "https://cdn.example.com/hw.pdf");
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt(), anyInt()))
                 .thenReturn(List.of(hw));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt(), anyInt()))
                 .thenReturn(List.of());
         when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(false);
         when(homeworkExecutionRepository.saveAndFlush(any())).thenAnswer(inv -> {

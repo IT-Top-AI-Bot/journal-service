@@ -57,7 +57,7 @@ class JournalServiceImplTest {
         User user = buildUserWithGroup(100L);
         when(userRepository.findByTelegramId(TELEGRAM_ID)).thenReturn(Optional.of(user));
         List<JournalHomeworkResponse> expected = List.of(mock(JournalHomeworkResponse.class));
-        when(journalClient.getHomeworks(1, 3, 1, 100)).thenReturn(expected);
+        when(journalClient.getHomeworks(1, 3, 1, 100, null)).thenReturn(expected);
 
         List<JournalHomeworkResponse> result = ScopedValue
                 .where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
