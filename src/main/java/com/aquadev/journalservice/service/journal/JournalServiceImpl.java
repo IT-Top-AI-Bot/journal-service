@@ -1,9 +1,9 @@
 package com.aquadev.journalservice.service.journal;
 
+import com.aquadev.commonlibs.HomeworkExecutionEvent;
 import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.kafka.KafkaTopicProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
-import com.aquadev.commonlibs.HomeworkExecutionEvent;
 import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
 import com.aquadev.journalservice.exception.domain.user.UserNotFoundException;
@@ -45,7 +45,7 @@ public class JournalServiceImpl implements JournalService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Group not found"));
 
-        return journalClient.getHomeworks(page, status, type, groupIdToUse.intValue());
+        return journalClient.getHomeworks(page, status, type, groupIdToUse.intValue(), null);
     }
 
     @Override
@@ -78,7 +78,8 @@ public class JournalServiceImpl implements JournalService {
                         homeworkExecution.getTeacherFio(),
                         homeworkExecution.getHomeworkUrl(),
                         homeworkExecution.getOverdueTime(),
-                        homeworkExecution.getCompletionTime()
+                        homeworkExecution.getCompletionTime(),
+                        homeworkExecution.getHomeworkText()
                 )
         );
 

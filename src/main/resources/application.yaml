@@ -93,7 +93,7 @@ crypto:
 
 logging:
   level:
-    com.aquadev.ittopai: DEBUG
+    com.aquadev.journalservice: DEBUG
     org.springframework.web: INFO
     org.springframework.web.client: DEBUG
 

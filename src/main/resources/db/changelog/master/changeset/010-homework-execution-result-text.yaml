@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-homework-execution-result-text
+      author: aquadev
+      changes:
+        - addColumn:
+            tableName: homework_execution
+            columns:
+              - column:
+                  name: result_text
+                  type: varchar(4096)
+                  constraints:
+                    nullable: true

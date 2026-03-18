@@ -68,6 +68,9 @@ public class HomeworkExecution {
     @Column(name = "homework_url", length = 4096)
     private String homeworkUrl;
 
+    @Column(name = "homework_text", length = 500)
+    private String homeworkText;
+
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -79,6 +82,9 @@ public class HomeworkExecution {
 
     @Column(name = "result_s3_key", length = 4096)
     private String resultS3Key;
+
+    @Column(name = "result_text", length = 4096)
+    private String resultText;
 
     @Column(name = "completed_at")
     private Instant completedAt;

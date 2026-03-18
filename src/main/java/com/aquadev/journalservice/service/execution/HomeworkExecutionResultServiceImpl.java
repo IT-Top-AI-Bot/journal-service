@@ -1,9 +1,10 @@
 package com.aquadev.journalservice.service.execution;
 
+import com.aquadev.commonlibs.HomeworkExecutionResultEvent;
+import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.s3.S3BucketProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
-import com.aquadev.commonlibs.HomeworkExecutionResultEvent;
 import com.aquadev.journalservice.model.HomeworkExecution;
 import com.aquadev.journalservice.service.execution.HomeworkExecutionPersistenceService.ExecutionWithTelegramId;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +17,6 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 @Slf4j
 @Service
@@ -33,6 +32,11 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
     public void handleEvent(HomeworkExecutionResultEvent event) {
         ExecutionWithTelegramId result = persistenceService.updateExecutionBaseInfo(event);
 
+        if (event.status() == HomeworkExecutionStatus.FAILED) {
+            log.warn("Execution {} completed with FAILED status, skipping journal upload", event.executionId());
+            return;
+        }
+
         try {
             ScopedValue.where(TelegramUserContext.TG_USER_ID, result.telegramId()).call(() -> {
                 processJournalUpload(result.execution());
@@ -45,22 +49,22 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
     }
 
     private void processJournalUpload(@NonNull HomeworkExecution execution) {
-        try {
-            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                    .bucket(s3BucketProperties.bucket())
-                    .key(execution.getResultS3Key())
-                    .build();
-
-            ResponseBytes<GetObjectResponse> responseBytes = s3Client.getObjectAsBytes(getObjectRequest);
-            byte[] content = responseBytes.asByteArray();
-            long fileSize = content.length;
-
-            try (InputStream inputStream = new ByteArrayInputStream(content)) {
-                journalClient.uploadHomework(execution.getHomeworkId(), inputStream, fileSize);
-                log.info("File for homework {} successfully streamed to journal", execution.getHomeworkId());
-            }
-        } catch (IOException e) {
-            log.error("Streaming upload failed for execution {}: {}", execution.getId(), e.getMessage());
+        if (execution.getResultText() != null && !execution.getResultText().isBlank()) {
+            journalClient.uploadHomeworkText(execution.getHomeworkId(), execution.getResultText());
+            log.info("Text result for homework {} submitted to journal", execution.getHomeworkId());
+            return;
         }
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(s3BucketProperties.bucket())
+                .key(execution.getResultS3Key())
+                .build();
+
+        ResponseBytes<GetObjectResponse> responseBytes = s3Client.getObjectAsBytes(getObjectRequest);
+        byte[] content = responseBytes.asByteArray();
+        long fileSize = content.length;
+
+        journalClient.uploadHomework(execution.getHomeworkId(), new ByteArrayInputStream(content), fileSize);
+        log.info("File for homework {} successfully streamed to journal", execution.getHomeworkId());
     }
 }
