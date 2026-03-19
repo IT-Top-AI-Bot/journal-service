@@ -69,13 +69,9 @@ public class JournalUserMapper {
     }
 
     private JournalGroup createGroup(Long journalGroupId, String groupName) {
-        String name = normalizeGroupName(journalGroupId, groupName);
-        // Upsert in a dedicated REQUIRES_NEW transaction: creates the group if absent,
-        // updates its name if stale, and safely handles concurrent inserts without
-        // poisoning the caller's outer transaction.
-        journalGroupUpsertService.ensureExists(journalGroupId, name);
-        // Re-fetch in the current (outer) transaction to obtain a managed entity;
-        // cascade ALL on JournalUser.journalGroups requires managed instances.
+        String insertName = normalizeGroupName(journalGroupId, groupName);
+        String updateName = (groupName != null && !groupName.isBlank()) ? groupName : null;
+        journalGroupUpsertService.ensureExists(journalGroupId, insertName, updateName);
         return journalGroupRepository.findByJournalGroupId(journalGroupId)
                 .orElseThrow(() -> new IllegalStateException(
                         "JournalGroup not found after upsert: " + journalGroupId));

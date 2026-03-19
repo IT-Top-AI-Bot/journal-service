@@ -36,7 +36,7 @@ class JournalGroupUpsertServiceTest {
     void ensureExists_groupAbsent_savesNewGroup() {
         given(journalGroupRepository.findByJournalGroupId(42L)).willReturn(Optional.empty());
 
-        service.ensureExists(42L, "Math");
+        service.ensureExists(42L, "Math", "Math");
 
         ArgumentCaptor<JournalGroup> captor = ArgumentCaptor.forClass(JournalGroup.class);
         verify(journalGroupRepository).saveAndFlush(captor.capture());
@@ -45,11 +45,22 @@ class JournalGroupUpsertServiceTest {
     }
 
     @Test
+    void ensureExists_groupAbsent_fallbackInsertName_savesWithFallback() {
+        given(journalGroupRepository.findByJournalGroupId(42L)).willReturn(Optional.empty());
+
+        service.ensureExists(42L, "Group 42", null);
+
+        ArgumentCaptor<JournalGroup> captor = ArgumentCaptor.forClass(JournalGroup.class);
+        verify(journalGroupRepository).saveAndFlush(captor.capture());
+        assertThat(captor.getValue().getName()).isEqualTo("Group 42");
+    }
+
+    @Test
     void ensureExists_groupPresent_sameName_doesNotSave() {
         JournalGroup existing = groupEntity(42L, "Math");
         given(journalGroupRepository.findByJournalGroupId(42L)).willReturn(Optional.of(existing));
 
-        service.ensureExists(42L, "Math");
+        service.ensureExists(42L, "Math", "Math");
 
         verify(journalGroupRepository, never()).save(any());
         verify(journalGroupRepository, never()).saveAndFlush(any());
@@ -60,10 +71,23 @@ class JournalGroupUpsertServiceTest {
         JournalGroup existing = groupEntity(42L, "Old Name");
         given(journalGroupRepository.findByJournalGroupId(42L)).willReturn(Optional.of(existing));
 
-        service.ensureExists(42L, "New Name");
+        service.ensureExists(42L, "New Name", "New Name");
 
         assertThat(existing.getName()).isEqualTo("New Name");
         verify(journalGroupRepository).save(existing);
+    }
+
+    @Test
+    void ensureExists_groupPresent_nullUpdateName_doesNotRename() {
+        JournalGroup existing = groupEntity(42L, "Real Name");
+        given(journalGroupRepository.findByJournalGroupId(42L)).willReturn(Optional.of(existing));
+
+        // groupName was unknown — fallback insertName, no updateName
+        service.ensureExists(42L, "Group 42", null);
+
+        assertThat(existing.getName()).isEqualTo("Real Name");
+        verify(journalGroupRepository, never()).save(any());
+        verify(journalGroupRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -73,7 +97,7 @@ class JournalGroupUpsertServiceTest {
                 .given(journalGroupRepository).saveAndFlush(any());
 
         // Must not throw — the concurrent insert means the group already exists in DB
-        service.ensureExists(42L, "Math");
+        service.ensureExists(42L, "Math", "Math");
     }
 
     // ── helper ────────────────────────────────────────────────────────────────
