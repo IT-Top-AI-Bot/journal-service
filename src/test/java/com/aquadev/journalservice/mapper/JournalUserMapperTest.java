@@ -58,7 +58,7 @@ class JournalUserMapperTest {
 
         mapper.toEntity(buildResponse(10L, "Group 10", 1L, 2, "Stream", "Name"), 1L);
 
-        verify(journalGroupUpsertService).ensureExists(10L, "Group 10");
+        verify(journalGroupUpsertService).ensureExists(10L, "Group 10", "Group 10");
     }
 
     @Test
@@ -70,7 +70,7 @@ class JournalUserMapperTest {
 
         assertThat(entity.getJournalGroups()).hasSize(1);
         assertThat(entity.getJournalGroups().iterator().next()).isSameAs(existingGroup);
-        verify(journalGroupUpsertService).ensureExists(10L, "Group 10");
+        verify(journalGroupUpsertService).ensureExists(10L, "Group 10", "Group 10");
         verify(journalGroupRepository).findByJournalGroupId(10L);
     }
 
