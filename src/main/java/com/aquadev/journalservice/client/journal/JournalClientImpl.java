@@ -91,7 +91,7 @@ public class JournalClientImpl implements JournalClient {
     }
 
     @Override
-    public JournalHomeworkUploadResponse uploadHomework(Long homeworkId, InputStream file, long fileSize) {
+    public JournalHomeworkUploadResponse uploadHomework(Long homeworkId, InputStream file, long fileSize, String filename) {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
         builder.part("id", homeworkId);
         builder.part("file", new InputStreamResource(file) {
@@ -102,7 +102,7 @@ public class JournalClientImpl implements JournalClient {
 
             @Override
             public String getFilename() {
-                return file.getClass().getSimpleName();
+                return filename;
             }
         }).contentType(MediaType.APPLICATION_OCTET_STREAM);
 
@@ -120,7 +120,9 @@ public class JournalClientImpl implements JournalClient {
     public JournalHomeworkUploadResponse uploadHomeworkText(Long homeworkId, String text) {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
         builder.part("id", homeworkId);
-        builder.part("text", text);
+        builder.part("answerText", text);
+        builder.part("spentTimeHour", "00");
+        builder.part("spentTimeMinute", "01");
 
         return restClient.post()
                 .uri("/homework/operations/create")

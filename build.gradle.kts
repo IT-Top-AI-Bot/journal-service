@@ -36,6 +36,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/IT-Top-AI-Bot/common-libs")
@@ -46,7 +47,7 @@ repositories {
     }
 }
 
-val commonLibsVersion by extra("1.0.2")
+val commonLibsVersion by extra("1.1.0")
 val mapStructVersion by extra("1.6.3")
 val springDocVersion by extra("3.0.1")
 val springCloudAwsVersion by extra("4.0.0")

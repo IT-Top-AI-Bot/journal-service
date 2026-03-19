@@ -15,6 +15,7 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.ByteArrayInputStream;
 
@@ -42,6 +43,14 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
                 processJournalUpload(result.execution());
                 return null;
             });
+        } catch (S3Exception e) {
+            if (e.statusCode() >= 500) {
+                log.warn("Transient S3 error (status={}) for execution {}, rethrowing for Kafka retry",
+                        e.statusCode(), event.executionId());
+                throw e;
+            }
+            log.error("Permanent S3 error for execution {}. Setting status to FAILED.", event.executionId(), e);
+            persistenceService.updateStatusToFailed(event.executionId());
         } catch (Exception e) {
             log.error("Failed to process journal upload for execution {}. Setting status to FAILED.", event.executionId(), e);
             persistenceService.updateStatusToFailed(event.executionId());
@@ -64,7 +73,13 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
         byte[] content = responseBytes.asByteArray();
         long fileSize = content.length;
 
-        journalClient.uploadHomework(execution.getHomeworkId(), new ByteArrayInputStream(content), fileSize);
+        String s3Key = execution.getResultS3Key();
+        // S3 key format: {homeworkId}-{uuid36}-{filename}
+        // UUID is always 36 chars: skip past homeworkId dash (indexOf) + uuid (36) + separator dash (1)
+        int uuidStart = s3Key.indexOf('-') + 1;
+        String filename = s3Key.substring(uuidStart + 36 + 1);
+
+        journalClient.uploadHomework(execution.getHomeworkId(), new ByteArrayInputStream(content), fileSize, filename);
         log.info("File for homework {} successfully streamed to journal", execution.getHomeworkId());
     }
 }

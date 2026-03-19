@@ -193,8 +193,7 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                         execution.getTeacherFio(),
                         execution.getHomeworkUrl(),
                         execution.getOverdueTime(),
-                        execution.getCompletionTime(),
-                        null
+                        execution.getCompletionTime()
                 )
         );
 

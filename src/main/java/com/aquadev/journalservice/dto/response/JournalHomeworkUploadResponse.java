@@ -13,6 +13,6 @@ public record JournalHomeworkUploadResponse(
         LocalDate creationTime,
         @JsonProperty("stud_answer")
         String studentAnswer,
-        Integer autoMark
+        Boolean autoMark
 ) {
 }

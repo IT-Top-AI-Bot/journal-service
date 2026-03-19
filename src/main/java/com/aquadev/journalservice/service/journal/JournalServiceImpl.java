@@ -78,8 +78,7 @@ public class JournalServiceImpl implements JournalService {
                         homeworkExecution.getTeacherFio(),
                         homeworkExecution.getHomeworkUrl(),
                         homeworkExecution.getOverdueTime(),
-                        homeworkExecution.getCompletionTime(),
-                        null
+                        homeworkExecution.getCompletionTime()
                 )
         );
 

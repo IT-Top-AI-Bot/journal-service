@@ -23,7 +23,7 @@ public interface JournalClient {
 
     Optional<JournalHomeworkEvaluationResponse> getHomeworkEvaluation(Long homeworkId);
 
-    JournalHomeworkUploadResponse uploadHomework(Long homeworkId, InputStream file, long fileSize);
+    JournalHomeworkUploadResponse uploadHomework(Long homeworkId, InputStream file, long fileSize, String filename);
 
     JournalHomeworkUploadResponse uploadHomeworkText(Long homeworkId, String text);
 
