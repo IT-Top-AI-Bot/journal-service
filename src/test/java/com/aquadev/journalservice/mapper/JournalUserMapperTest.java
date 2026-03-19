@@ -5,6 +5,7 @@ import com.aquadev.journalservice.dto.response.JournalUserResponse;
 import com.aquadev.journalservice.model.JournalGroup;
 import com.aquadev.journalservice.model.JournalUser;
 import com.aquadev.journalservice.repository.JournalGroupRepository;
+import com.aquadev.journalservice.service.group.JournalGroupUpsertService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,19 +28,18 @@ class JournalUserMapperTest {
     @Mock
     JournalGroupRepository journalGroupRepository;
 
+    @Mock
+    JournalGroupUpsertService journalGroupUpsertService;
+
     @InjectMocks
     JournalUserMapper mapper;
 
     @Test
     void toEntity_success_mapsAllFields() {
-        given(journalGroupRepository.findByJournalGroupId(10L)).willReturn(Optional.empty());
+        JournalGroup group = groupEntity(10L, "Group 10");
+        given(journalGroupRepository.findByJournalGroupId(10L)).willReturn(Optional.of(group));
 
-        JournalUserResponse source = new JournalUserResponse(
-                List.of(new JournalGroupResponse(1, true, 10L, "Group 10")),
-                null, 1L, 10L, "Name", 0, 2, "Stream", 1, "Photo",
-                List.of(), List.of(), null, 1, LocalDate.now(), (short) 20,
-                Instant.now(), Instant.now(), true, "Form"
-        );
+        JournalUserResponse source = buildResponse(10L, "Group 10", 1L, 2, "Stream", "Name");
 
         JournalUser entity = mapper.toEntity(source, 1L);
 
@@ -52,24 +52,25 @@ class JournalUserMapperTest {
     }
 
     @Test
-    void toEntity_groupAlreadyExistsInDb_reusesExistingEntity() {
-        JournalGroup existingGroup = new JournalGroup();
-        existingGroup.setJournalGroupId(10L);
-        existingGroup.setName("Group 10");
+    void toEntity_callsEnsureExistsWithNormalizedName() {
+        JournalGroup group = groupEntity(10L, "Group 10");
+        given(journalGroupRepository.findByJournalGroupId(10L)).willReturn(Optional.of(group));
 
+        mapper.toEntity(buildResponse(10L, "Group 10", 1L, 2, "Stream", "Name"), 1L);
+
+        verify(journalGroupUpsertService).ensureExists(10L, "Group 10");
+    }
+
+    @Test
+    void toEntity_groupAlreadyExistsInDb_reusesExistingManagedEntity() {
+        JournalGroup existingGroup = groupEntity(10L, "Group 10");
         given(journalGroupRepository.findByJournalGroupId(10L)).willReturn(Optional.of(existingGroup));
 
-        JournalUserResponse source = new JournalUserResponse(
-                List.of(new JournalGroupResponse(1, true, 10L, "Group 10")),
-                null, 1L, 10L, "Name", 0, 2, "Stream", 1, "Photo",
-                List.of(), List.of(), null, 1, LocalDate.now(), (short) 20,
-                Instant.now(), Instant.now(), true, "Form"
-        );
-
-        JournalUser entity = mapper.toEntity(source, 1L);
+        JournalUser entity = mapper.toEntity(buildResponse(10L, "Group 10", 1L, 2, "Stream", "Name"), 1L);
 
         assertThat(entity.getJournalGroups()).hasSize(1);
         assertThat(entity.getJournalGroups().iterator().next()).isSameAs(existingGroup);
+        verify(journalGroupUpsertService).ensureExists(10L, "Group 10");
         verify(journalGroupRepository).findByJournalGroupId(10L);
     }
 
@@ -91,5 +92,25 @@ class JournalUserMapperTest {
     void toEntity_nullSource_throwsException() {
         assertThatThrownBy(() -> mapper.toEntity(null, 1L))
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    private static JournalGroup groupEntity(Long journalGroupId, String name) {
+        JournalGroup g = new JournalGroup();
+        g.setJournalGroupId(journalGroupId);
+        g.setName(name);
+        return g;
+    }
+
+    private static JournalUserResponse buildResponse(Long groupId, String groupName,
+                                                     Long studentId, Integer streamId,
+                                                     String streamName, String fullName) {
+        return new JournalUserResponse(
+                List.of(new JournalGroupResponse(1, true, groupId, groupName)),
+                null, studentId, groupId, fullName, 0, streamId, streamName, 1, "Photo",
+                List.of(), List.of(), null, 1, LocalDate.now(), (short) 20,
+                Instant.now(), Instant.now(), true, "Form"
+        );
     }
 }
