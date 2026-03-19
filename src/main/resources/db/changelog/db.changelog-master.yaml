@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/master/changeset/009-user-auto-homework-subjects.yaml
   - include:
       file: db/changelog/master/changeset/010-homework-execution-result-text.yaml
+  - include:
+      file: db/changelog/master/changeset/011-journal-user-groups-many-to-many.yaml
