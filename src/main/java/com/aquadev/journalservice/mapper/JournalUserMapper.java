@@ -4,14 +4,26 @@ import com.aquadev.journalservice.dto.response.JournalGroupResponse;
 import com.aquadev.journalservice.dto.response.JournalUserResponse;
 import com.aquadev.journalservice.model.JournalGroup;
 import com.aquadev.journalservice.model.JournalUser;
+import com.aquadev.journalservice.repository.JournalGroupRepository;
+import com.aquadev.journalservice.service.group.JournalGroupUpsertService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 @Component
+@RequiredArgsConstructor
 public class JournalUserMapper {
 
     private static final String FALLBACK_GROUP_PREFIX = "Group ";
+
+    private final JournalGroupRepository journalGroupRepository;
+    private final JournalGroupUpsertService journalGroupUpsertService;
 
     public JournalUser toEntity(JournalUserResponse source, long fallbackJournalUserId) {
         if (source == null) {
@@ -57,10 +69,12 @@ public class JournalUserMapper {
     }
 
     private JournalGroup createGroup(Long journalGroupId, String groupName) {
-        JournalGroup group = new JournalGroup();
-        group.setJournalGroupId(journalGroupId);
-        group.setName(normalizeGroupName(journalGroupId, groupName));
-        return group;
+        String insertName = normalizeGroupName(journalGroupId, groupName);
+        String updateName = (groupName != null && !groupName.isBlank()) ? groupName : null;
+        journalGroupUpsertService.ensureExists(journalGroupId, insertName, updateName);
+        return journalGroupRepository.findByJournalGroupId(journalGroupId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "JournalGroup not found after upsert: " + journalGroupId));
     }
 
     private String normalizeGroupName(Long journalGroupId, String groupName) {

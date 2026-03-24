@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-1
+      author: aqua
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      comment: "Drop the unique constraint on journal_groups_id that prevented a JournalGroup from being shared across multiple JournalUsers (OneToMany → ManyToMany)"
+      changes:
+        - dropUniqueConstraint:
+            constraintName: uc_journal_user_journal_groups_journalgroups
+            tableName: journal_user_journal_groups
