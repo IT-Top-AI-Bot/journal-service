@@ -5,6 +5,7 @@ import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.s3.S3BucketProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
+import com.aquadev.journalservice.exception.domain.homeworkexecution.HomeworkExecutionNotFoundException;
 import com.aquadev.journalservice.model.HomeworkExecution;
 import com.aquadev.journalservice.service.execution.HomeworkExecutionPersistenceService.ExecutionWithTelegramId;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,13 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
 
     @Override
     public void handleEvent(HomeworkExecutionResultEvent event) {
-        ExecutionWithTelegramId result = persistenceService.updateExecutionBaseInfo(event);
+        ExecutionWithTelegramId result;
+        try {
+            result = persistenceService.updateExecutionBaseInfo(event);
+        } catch (HomeworkExecutionNotFoundException _) {
+            log.warn("Skipping homework-result event: execution {} not found, possibly a stale message", event.executionId());
+            return;
+        }
 
         if (event.status() == HomeworkExecutionStatus.FAILED) {
             log.warn("Execution {} completed with FAILED status, skipping journal upload", event.executionId());
@@ -74,12 +81,11 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
         long fileSize = content.length;
 
         String s3Key = execution.getResultS3Key();
-        // S3 key format: {homeworkId}-{uuid36}-{filename}
-        // UUID is always 36 chars: skip past homeworkId dash (indexOf) + uuid (36) + separator dash (1)
         int uuidStart = s3Key.indexOf('-') + 1;
         String filename = s3Key.substring(uuidStart + 36 + 1);
 
         journalClient.uploadHomework(execution.getHomeworkId(), new ByteArrayInputStream(content), fileSize, filename);
-        log.info("File for homework {} successfully streamed to journal", execution.getHomeworkId());
+        log.info("File for homework {} successfully streamed to journal: filename={}, size={} bytes",
+                execution.getHomeworkId(), filename, fileSize);
     }
 }

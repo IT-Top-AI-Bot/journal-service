@@ -2,7 +2,7 @@ plugins {
     java
     jacoco
     id("org.sonarqube") version "7.2.3.7755"
-    id("org.springframework.boot") version "4.0.3"
+    id("org.springframework.boot") version "4.0.4"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -63,7 +63,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.springframework.cloud:spring-cloud-starter-kubernetes-client-all")
+    implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
+    implementation("org.springframework.cloud:spring-cloud-starter-kubernetes-discoveryclient")
     implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocVersion")
     implementation("io.github.resilience4j:resilience4j-spring-boot3")

@@ -36,6 +36,10 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    listener:
+      observation-enabled: true
+    template:
+      observation-enabled: true
 
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
@@ -77,12 +81,6 @@ kafka:
   homework-execution-topic: homework-execution
   homework-execution-result: homework-result
 
-outbox:
-  batch-size: 100
-  max-attempts: 5
-  retry-delay-seconds: 60
-  relay-interval-ms: 5000
-
 auto-homework:
   check-interval-ms: 21600000  # 6 часов
 
@@ -93,6 +91,8 @@ crypto:
   secret-key: ${ENCRYPTION_KEY}
 
 logging:
+  pattern:
+    correlation: "[%X{traceId:-}/%X{spanId:-} ${spring.application.name}] "
   level:
     com.aquadev.journalservice: DEBUG
     org.springframework.web: INFO
@@ -100,3 +100,20 @@ logging:
 
 server:
   port: ${SERVER_PORT:8080}
+
+management:
+  observations:
+    enable:
+      spring.data.redis: false
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
+  otlp:
+    metrics:
+      export:
+        enabled: false

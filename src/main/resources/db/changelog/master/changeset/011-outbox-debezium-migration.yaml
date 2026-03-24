@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-outbox-debezium-migration
+      author: aqua
+      comment: "Remove polling-specific columns from outbox_event; Debezium reads WAL directly"
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropIndex:
+            indexName: idx_outbox_event_status_next_attempt
+            tableName: outbox_event
+        - dropColumn:
+            tableName: outbox_event
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: attempts
+              - column:
+                  name: next_attempt_at
+              - column:
+                  name: locked_by
+              - column:
+                  name: locked_at
+              - column:
+                  name: sent_at

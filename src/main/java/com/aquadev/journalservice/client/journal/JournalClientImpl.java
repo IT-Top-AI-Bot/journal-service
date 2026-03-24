@@ -94,6 +94,8 @@ public class JournalClientImpl implements JournalClient {
     public JournalHomeworkUploadResponse uploadHomework(Long homeworkId, InputStream file, long fileSize, String filename) {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
         builder.part("id", homeworkId);
+        builder.part("spentTimeHour", "00");
+        builder.part("spentTimeMinute", "01");
         builder.part("file", new InputStreamResource(file) {
             @Override
             public long contentLength() {
