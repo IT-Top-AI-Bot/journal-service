@@ -4,12 +4,16 @@ import com.aquadev.journalservice.model.OutboxEvent;
 import com.aquadev.journalservice.repository.OutboxEventRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OutboxEventPublisher {
@@ -32,7 +36,15 @@ public class OutboxEventPublisher {
                     "Failed to serialize outbox payload for aggregateId=" + aggregateId, e);
         }
         OutboxEvent event = OutboxEvent.newEvent(
-                aggregateType, aggregateId, eventType, topic, UUID.randomUUID().toString(), json);
+                aggregateType, aggregateId, eventType, topic, UUID.randomUUID().toString(), json, currentTraceparent());
         outboxEventRepository.save(event);
+    }
+
+    private static String currentTraceparent() {
+        SpanContext ctx = Span.current().getSpanContext();
+        if (!ctx.isValid()) {
+            return null;
+        }
+        return "00-" + ctx.getTraceId() + "-" + ctx.getSpanId() + "-" + ctx.getTraceFlags().asHex();
     }
 }

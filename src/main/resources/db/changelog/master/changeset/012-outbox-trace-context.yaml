@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-outbox-trace-context
+      author: aqua
+      comment: "Add trace_context column to outbox_event for distributed trace propagation via Debezium"
+      changes:
+        - addColumn:
+            tableName: outbox_event
+            columns:
+              - column:
+                  name: trace_context
+                  type: VARCHAR(512)

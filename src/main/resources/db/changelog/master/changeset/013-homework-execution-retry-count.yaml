@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-homework-execution-retry-count
+      author: aqua
+      comment: "Add retry_count to homework_execution for tracking dispatch retry attempts"
+      changes:
+        - addColumn:
+            tableName: homework_execution
+            columns:
+              - column:
+                  name: retry_count
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

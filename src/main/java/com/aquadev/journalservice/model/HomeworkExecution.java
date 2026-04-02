@@ -73,6 +73,10 @@ public class HomeworkExecution {
     @Column(name = "status", nullable = false)
     private HomeworkExecutionStatus status = HomeworkExecutionStatus.PENDING;
 
+    @Builder.Default
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount = 0;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

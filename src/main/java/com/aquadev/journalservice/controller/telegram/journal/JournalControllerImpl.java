@@ -1,6 +1,5 @@
 package com.aquadev.journalservice.controller.telegram.journal;
 
-import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
 import com.aquadev.journalservice.dto.response.HomeworkExecutionResponse;
 import com.aquadev.journalservice.dto.response.JournalCountHomeworkResponse;
@@ -30,20 +29,19 @@ import java.util.List;
 @RequestMapping("/api/v1/telegram/journal")
 public class JournalControllerImpl implements JournalController {
 
-    private final JournalClient journalClient;
     private final JournalService journalService;
     private final HomeworkExecutionMapper homeworkExecutionMapper;
 
     @Override
     @GetMapping("/me")
     public JournalUserResponse getCurrentUser() {
-        return journalClient.getCurrentUser();
+        return journalService.getCurrentUser();
     }
 
     @Override
     @GetMapping("/homework/count")
     public List<JournalCountHomeworkResponse> getCountHomework() {
-        return journalClient.getCountHomework();
+        return journalService.getCountHomework();
     }
 
     @Override
@@ -65,12 +63,12 @@ public class JournalControllerImpl implements JournalController {
     @Override
     @GetMapping("/schedule/{date}")
     public List<JournalScheduleResponse> getScheduleByDate(@PathVariable LocalDate date) {
-        return journalClient.getScheduleByDate(date);
+        return journalService.getScheduleByDate(date);
     }
 
     @Override
     @GetMapping("/group-specs")
     public List<JournalSpecResponse> getGroupSpecs() {
-        return journalClient.getGroupSpecs();
+        return journalService.getGroupSpecs();
     }
 }

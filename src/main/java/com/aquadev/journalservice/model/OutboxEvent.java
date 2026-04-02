@@ -54,13 +54,17 @@ public class OutboxEvent {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "trace_context", length = 512)
+    private String traceContext;
+
     public static OutboxEvent newEvent(
             String aggregateType,
             String aggregateId,
             String eventType,
             String topic,
             String key,
-            String payloadJson
+            String payloadJson,
+            String traceContext
     ) {
         return OutboxEvent.builder()
                 .aggregateType(aggregateType)
@@ -69,6 +73,7 @@ public class OutboxEvent {
                 .topic(topic)
                 .key(key)
                 .payload(payloadJson)
+                .traceContext(traceContext)
                 .build();
     }
 }

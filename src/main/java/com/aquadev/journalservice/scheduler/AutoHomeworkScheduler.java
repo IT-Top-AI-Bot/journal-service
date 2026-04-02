@@ -15,13 +15,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AutoHomeworkScheduler {
 
-    private final UserAutoHomeworkSettingsRepository settingsRepository;
     private final AutoHomeworkService autoHomeworkService;
+    private final UserAutoHomeworkSettingsRepository settingsRepository;
 
     @Scheduled(fixedRateString = "${auto-homework.check-interval-ms:21600000}")
     public void run() {
         List<UserAutoHomeworkSettings> enabled = settingsRepository.findAllEnabledWithUserData();
         log.info("Auto homework scheduler: processing {} enabled user(s)", enabled.size());
-        enabled.forEach(autoHomeworkService::checkAndDispatch);
+        for (UserAutoHomeworkSettings settings : enabled) {
+            autoHomeworkService.checkAndDispatch(settings);
+        }
     }
 }

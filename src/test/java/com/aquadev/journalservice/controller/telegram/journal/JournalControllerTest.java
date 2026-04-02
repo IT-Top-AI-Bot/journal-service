@@ -1,7 +1,6 @@
 package com.aquadev.journalservice.controller.telegram.journal;
 
 import com.aquadev.commonlibs.HomeworkExecutionStatus;
-import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.telegram.TelegramUserIdFilter;
 import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
 import com.aquadev.journalservice.dto.response.HomeworkExecutionResponse;
@@ -40,9 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class JournalControllerTest {
 
     @Mock
-    JournalClient journalClient;
-
-    @Mock
     JournalService journalService;
 
     @Mock
@@ -73,7 +69,7 @@ class JournalControllerTest {
                 null, null, null, null, null,
                 null, null, null, null, null,
                 null, null, null, null, null);
-        when(journalClient.getCurrentUser()).thenReturn(userResponse);
+        when(journalService.getCurrentUser()).thenReturn(userResponse);
 
         mockMvc.perform(get("/api/v1/telegram/journal/me")
                         .header(HEADER, "12345"))
@@ -91,7 +87,7 @@ class JournalControllerTest {
     @Test
     void getCountHomework_returnsList_whenValidHeader() throws Exception {
         JournalCountHomeworkResponse countResp = new JournalCountHomeworkResponse(1, 5);
-        when(journalClient.getCountHomework()).thenReturn(List.of(countResp));
+        when(journalService.getCountHomework()).thenReturn(List.of(countResp));
 
         mockMvc.perform(get("/api/v1/telegram/journal/homework/count")
                         .header(HEADER, "12345"))
@@ -170,7 +166,7 @@ class JournalControllerTest {
         JournalScheduleResponse schedule = new JournalScheduleResponse(
                 null, 1, null, null,
                 "Teacher", "Math", "101");
-        when(journalClient.getScheduleByDate(date)).thenReturn(List.of(schedule));
+        when(journalService.getScheduleByDate(date)).thenReturn(List.of(schedule));
 
         mockMvc.perform(get("/api/v1/telegram/journal/schedule/{date}", date)
                         .header(HEADER, "12345"))
