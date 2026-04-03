@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ErrorResponse handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
-        log.warn("[DB] Data integrity violation on {}: {}", request.getRequestURI(), ex.getMostSpecificCause().getMessage());
+        log.warn("[DB] Data integrity violation on {}: {}", request.getRequestURI().replace('\n', '_').replace('\r', '_'), ex.getMostSpecificCause().getMessage());
         return new ErrorResponse(
                 Instant.now(),
                 HttpStatus.CONFLICT.value(),
