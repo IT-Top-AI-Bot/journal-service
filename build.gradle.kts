@@ -29,6 +29,11 @@ sonar {
 }
 
 configurations {
+    all {
+        resolutionStrategy {
+            disableDependencyVerification()
+        }
+    }
     compileOnly {
         extendsFrom(configurations.annotationProcessor.get())
     }
