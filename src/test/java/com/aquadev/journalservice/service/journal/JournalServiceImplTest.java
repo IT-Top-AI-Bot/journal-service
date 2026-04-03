@@ -30,10 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JournalServiceImplTest {
@@ -44,6 +41,8 @@ class JournalServiceImplTest {
     @Mock HomeworkExecutionRepository homeworkExecutionRepository;
     @Mock OutboxEventPublisher outboxEventPublisher;
     @Mock KafkaTopicProperties kafkaProperties;
+    @Mock
+    com.aquadev.journalservice.tracing.HomeworkExecutionSpan homeworkExecutionSpan;
 
     @InjectMocks
     JournalServiceImpl journalService;
@@ -106,6 +105,10 @@ class JournalServiceImplTest {
         when(homeworkExecutionMapper.toEntity(any())).thenReturn(execution);
         when(homeworkExecutionRepository.saveAndFlush(execution)).thenReturn(execution);
         when(kafkaProperties.homeworkExecutionTopic()).thenReturn("homework-execution");
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(1)).run();
+            return null;
+        }).when(homeworkExecutionSpan).run(any(), any());
 
         HomeworkExecution result = ScopedValue
                 .where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)

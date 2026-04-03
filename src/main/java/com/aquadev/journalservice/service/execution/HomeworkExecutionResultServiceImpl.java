@@ -5,6 +5,7 @@ import com.aquadev.commonlibs.HomeworkExecutionStatus;
 import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.s3.S3BucketProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
+import com.aquadev.journalservice.exception.domain.homeworkexecution.HomeworkExecutionNotFoundException;
 import com.aquadev.journalservice.model.HomeworkExecution;
 import com.aquadev.journalservice.service.execution.HomeworkExecutionPersistenceService.ExecutionWithTelegramId;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +16,10 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.ByteArrayInputStream;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -30,7 +33,13 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
 
     @Override
     public void handleEvent(HomeworkExecutionResultEvent event) {
-        ExecutionWithTelegramId result = persistenceService.updateExecutionBaseInfo(event);
+        ExecutionWithTelegramId result;
+        try {
+            result = persistenceService.updateExecutionBaseInfo(event);
+        } catch (HomeworkExecutionNotFoundException _) {
+            log.warn("Skipping homework-result event: execution {} not found, possibly a stale message", event.executionId());
+            return;
+        }
 
         if (event.status() == HomeworkExecutionStatus.FAILED) {
             log.warn("Execution {} completed with FAILED status, skipping journal upload", event.executionId());
@@ -42,10 +51,23 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
                 processJournalUpload(result.execution());
                 return null;
             });
+        } catch (S3Exception e) {
+            if (e.statusCode() >= 500) {
+                log.warn("Transient S3 error (status={}) for execution {}, rethrowing for Kafka retry",
+                        e.statusCode(), event.executionId());
+                throw e;
+            }
+            log.error("Permanent S3 error for execution {}. Setting status to FAILED.", event.executionId(), e);
+            persistenceService.updateStatusToFailed(event.executionId());
         } catch (Exception e) {
             log.error("Failed to process journal upload for execution {}. Setting status to FAILED.", event.executionId(), e);
             persistenceService.updateStatusToFailed(event.executionId());
         }
+    }
+
+    @Override
+    public void updateStatusToFailed(UUID executionId) {
+        persistenceService.updateStatusToFailed(executionId);
     }
 
     private void processJournalUpload(@NonNull HomeworkExecution execution) {
@@ -64,7 +86,12 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
         byte[] content = responseBytes.asByteArray();
         long fileSize = content.length;
 
-        journalClient.uploadHomework(execution.getHomeworkId(), new ByteArrayInputStream(content), fileSize);
-        log.info("File for homework {} successfully streamed to journal", execution.getHomeworkId());
+        String s3Key = execution.getResultS3Key();
+        int uuidStart = s3Key.indexOf('-') + 1;
+        String filename = s3Key.substring(uuidStart + 36 + 1);
+
+        journalClient.uploadHomework(execution.getHomeworkId(), new ByteArrayInputStream(content), fileSize, filename);
+        log.info("File for homework {} successfully streamed to journal: filename={}, size={} bytes",
+                execution.getHomeworkId(), filename, fileSize);
     }
 }

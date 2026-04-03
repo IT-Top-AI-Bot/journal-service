@@ -25,9 +25,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.queryParam;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -134,20 +132,20 @@ class JournalClientImplTest {
 
     @Test
     void uploadHomework_success() throws Exception {
-        JournalHomeworkUploadResponse expected = new JournalHomeworkUploadResponse(1L, "file.pdf", "/path", "tmp", 0, LocalDate.now(), "answer", 0);
+        JournalHomeworkUploadResponse expected = new JournalHomeworkUploadResponse(1L, "file.pdf", "/path", "tmp", 0, LocalDate.now(), "answer", false);
 
         mockServer.expect(requestTo("/homework/operations/create"))
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(objectMapper.writeValueAsString(expected), MediaType.APPLICATION_JSON));
 
-        JournalHomeworkUploadResponse result = journalClient.uploadHomework(1L, new ByteArrayInputStream(new byte[0]), 0);
+        JournalHomeworkUploadResponse result = journalClient.uploadHomework(1L, new ByteArrayInputStream(new byte[0]), 0, "file.txt");
 
         assertThat(result.id()).isEqualTo(1L);
     }
 
     @Test
     void uploadHomeworkText_success() throws Exception {
-        JournalHomeworkUploadResponse expected = new JournalHomeworkUploadResponse(2L, null, null, null, 0, LocalDate.now(), "text answer", 0);
+        JournalHomeworkUploadResponse expected = new JournalHomeworkUploadResponse(2L, null, null, null, 0, LocalDate.now(), "text answer", false);
 
         mockServer.expect(requestTo("/homework/operations/create"))
                 .andExpect(method(HttpMethod.POST))

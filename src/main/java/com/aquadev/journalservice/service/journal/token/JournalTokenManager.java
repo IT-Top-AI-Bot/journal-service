@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -61,11 +63,7 @@ public class JournalTokenManager {
         Boolean locked = redis.opsForValue().setIfAbsent(lockKey, "1", LOCK_TTL);
 
         if (!Boolean.TRUE.equals(locked)) {
-            try {
-                Thread.sleep(120);
-            } catch (InterruptedException _) {
-                // Ignore interrupted exception and continue
-            }
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(120));
             String cached = redis.opsForValue().get(JournalRedisKeys.accessToken(journalUserId));
             if (cached != null) return cached;
 

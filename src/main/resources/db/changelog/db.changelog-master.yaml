@@ -21,3 +21,11 @@ databaseChangeLog:
       file: db/changelog/master/changeset/010-homework-execution-result-text.yaml
   - include:
       file: db/changelog/master/changeset/011-journal-user-groups-many-to-many.yaml
+  - include:
+      file: db/changelog/master/changeset/011-outbox-debezium-migration.yaml
+  - include:
+      file: db/changelog/master/changeset/012-outbox-trace-context.yaml
+  - include:
+      file: db/changelog/master/changeset/013-homework-execution-retry-count.yaml
+  - include:
+      file: db/changelog/master/changeset/014-indexes.yaml

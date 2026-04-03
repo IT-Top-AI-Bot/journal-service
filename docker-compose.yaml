@@ -12,6 +12,11 @@ services:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
+    command: >
+      postgres
+        -c wal_level=logical
+        -c max_replication_slots=4
+        -c max_wal_senders=4
     healthcheck:
       test: pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
       interval: 10s
@@ -77,6 +82,126 @@ services:
     depends_on:
       - kafka
 
+  debezium:
+    image: debezium/connect:3.0.0.Final
+    restart: "no"
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: debezium-journal
+      CONFIG_STORAGE_TOPIC: debezium-journal-configs
+      OFFSET_STORAGE_TOPIC: debezium-journal-offsets
+      STATUS_STORAGE_TOPIC: debezium-journal-statuses
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail -s http://localhost:8083/connectors || exit 1
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+
+  debezium-init:
+    image: curlimages/curl:latest
+    restart: "no"
+    env_file:
+      - .env
+    volumes:
+      - ./infra/debezium-connector.json:/connector.json
+      - ./infra/register-connector.sh:/register-connector.sh
+    depends_on:
+      debezium:
+        condition: service_healthy
+    entrypoint: [ "sh", "/register-connector.sh" ]
+
+
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:latest
+    restart: "no"
+    command: [ "--config=/etc/otelcol/config.yaml", "--feature-gates=service.profilesSupport" ]
+    ports:
+      - "4317:4317"   # OTLP gRPC (Spring Boot → Collector)
+      - "4318:4318"   # OTLP HTTP (Spring Boot → Collector)
+    volumes:
+      - ./infra/otelcol-config.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      - tempo
+      - prometheus
+      - loki
+      - pyroscope
+
+  tempo:
+    image: grafana/tempo:2.10.3
+    restart: "no"
+    command: [ "-config.file=/etc/tempo/config.yaml" ]
+    ports:
+      - "3200:3200"   # Tempo HTTP + MCP (/api/mcp)
+    volumes:
+      - ./infra/tempo-config.yaml:/etc/tempo/config.yaml:ro
+      - tempo_data:/data/tempo
+
+  loki:
+    image: grafana/loki:latest
+    restart: "no"
+    user: "0"
+    command: [ "-config.file=/etc/loki/config.yaml" ]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infra/loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/data/loki
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: "no"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=otlp-write-receiver
+      - --enable-feature=native-histograms
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - prometheus_data:/prometheus
+
+  pyroscope:
+    image: grafana/pyroscope:latest
+    restart: "no"
+    ports:
+      - "4040:4040"
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: "no"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./infra/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    depends_on:
+      - tempo
+      - loki
+      - prometheus
+      - pyroscope
+
 volumes:
   postgres_data:
   kafka_data:
+  tempo_data:
+  loki_data:
+  prometheus_data:
+  grafana_data:

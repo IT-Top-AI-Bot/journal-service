@@ -6,6 +6,7 @@ import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.journal.JournalApiProperties;
 import com.aquadev.journalservice.config.kafka.KafkaTopicProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
+import com.aquadev.journalservice.dto.request.HomeworkType;
 import com.aquadev.journalservice.dto.request.UpdateAutoHomeworkSettingsRequest;
 import com.aquadev.journalservice.dto.response.AutoHomeworkSettingsResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
@@ -19,6 +20,7 @@ import com.aquadev.journalservice.repository.HomeworkExecutionRepository;
 import com.aquadev.journalservice.repository.UserAutoHomeworkSettingsRepository;
 import com.aquadev.journalservice.repository.UserRepository;
 import com.aquadev.journalservice.service.outbox.OutboxEventPublisher;
+import com.aquadev.journalservice.tracing.HomeworkExecutionSpan;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,6 +45,7 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
     private final KafkaTopicProperties kafkaProperties;
     private final JournalApiProperties journalApiProperties;
     private final OutboxEventPublisher outboxEventPublisher;
+    private final HomeworkExecutionSpan homeworkExecutionSpan;
     private final UserAutoHomeworkSettingsRepository settingsRepository;
     private final HomeworkExecutionRepository homeworkExecutionRepository;
 
@@ -108,12 +111,16 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
                 }
 
                 for (Long specId : specIds) {
-                    Stream.concat(
-                                    getHomeworksBySpec(JournalHomeworkStatus.NOT_COMPLETED, groupId, specId),
-                                    getHomeworksBySpec(JournalHomeworkStatus.EXPIRED, groupId, specId)
+                    Stream.of(
+                                    getHomeworksBySpec(JournalHomeworkStatus.NOT_COMPLETED, HomeworkType.HOMEWORK, groupId, specId),
+                                    getHomeworksBySpec(JournalHomeworkStatus.EXPIRED, HomeworkType.HOMEWORK, groupId, specId),
+                                    getHomeworksBySpec(JournalHomeworkStatus.NOT_COMPLETED, HomeworkType.LAB_WORK, groupId, specId),
+                                    getHomeworksBySpec(JournalHomeworkStatus.EXPIRED, HomeworkType.LAB_WORK, groupId, specId),
+                                    getHomeworksBySpec(JournalHomeworkStatus.DELETED_BY_TEACHER, HomeworkType.HOMEWORK, groupId, specId),
+                                    getHomeworksBySpec(JournalHomeworkStatus.DELETED_BY_TEACHER, HomeworkType.LAB_WORK, groupId, specId)
                             )
-                            .filter(hw -> !homeworkExecutionRepository.existsByUserAndHomeworkId(user, hw.id().longValue()))
-                            .forEach(hw -> createAndPublish(hw, user));
+                            .flatMap(s -> s)
+                            .forEach(hw -> createOrRetry(hw, user));
                 }
 
                 settings.setLastCheckedAt(Instant.now());
@@ -133,11 +140,11 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
         }
     }
 
-    private Stream<JournalHomeworkResponse> getHomeworksBySpec(JournalHomeworkStatus status, Long groupId, Long specId) {
+    private Stream<JournalHomeworkResponse> getHomeworksBySpec(JournalHomeworkStatus status, HomeworkType type, Long groupId, Long specId) {
         List<JournalHomeworkResponse> homeworks = journalClient.getHomeworks(
                 1,
                 status.getId(),
-                0,
+                type.getId(),
                 groupId.intValue(),
                 specId.intValue()
         );
@@ -145,8 +152,43 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
         return homeworks != null ? homeworks.stream() : Stream.empty();
     }
 
-    private void createAndPublish(JournalHomeworkResponse hw, User user) {
+    private static final int MAX_RETRY_COUNT = 3;
 
+    private void createOrRetry(JournalHomeworkResponse hw, User user) {
+        Long homeworkId = hw.id().longValue();
+
+        homeworkExecutionRepository.findByUserAndHomeworkId(user, homeworkId)
+                .ifPresentOrElse(
+                        existing -> retryIfEligible(existing, user),
+                        () -> createAndPublish(hw, user)
+                );
+    }
+
+    private void retryIfEligible(HomeworkExecution existing, User user) {
+        if (existing.getStatus() != HomeworkExecutionStatus.FAILED) {
+            log.debug("Skipping homeworkId={} — status={}", existing.getHomeworkId(), existing.getStatus());
+            return;
+        }
+        if (existing.getRetryCount() >= MAX_RETRY_COUNT) {
+            log.warn("Skipping homeworkId={} — max retries ({}) exhausted",
+                    existing.getHomeworkId(), MAX_RETRY_COUNT);
+            return;
+        }
+
+        existing.setStatus(HomeworkExecutionStatus.PENDING);
+        existing.setRetryCount(existing.getRetryCount() + 1);
+        existing.setResultS3Key(null);
+        existing.setResultText(null);
+        existing.setCompletedAt(null);
+        HomeworkExecution saved = homeworkExecutionRepository.saveAndFlush(existing);
+
+        log.info("Retrying homeworkId={} attempt={}/{} for user telegramId={}",
+                saved.getHomeworkId(), saved.getRetryCount(), MAX_RETRY_COUNT, user.getTelegramId());
+
+        publishEvent(saved);
+    }
+
+    private void createAndPublish(JournalHomeworkResponse hw, User user) {
         String filePath = hw.filePath();
         String homeworkUrl = null;
 
@@ -174,35 +216,36 @@ public class AutoHomeworkServiceImpl implements AutoHomeworkService {
 
         execution = homeworkExecutionRepository.saveAndFlush(execution);
 
-        outboxEventPublisher.publish(
-                AGGREGATE_TYPE,
-                execution.getId().toString(),
-                EVENT_TYPE,
-                kafkaProperties.homeworkExecutionTopic(),
-                new HomeworkExecutionEvent(
-                        execution.getId(),
-                        execution.getTheme(),
-                        execution.getSpecId(),
-                        execution.getStatus(),
-                        execution.getComment(),
-                        execution.getGroupId(),
-                        execution.getTeachId(),
-                        execution.getNameSpec(),
-                        execution.getCreatedAt(),
-                        execution.getHomeworkId(),
-                        execution.getTeacherFio(),
-                        execution.getHomeworkUrl(),
-                        execution.getOverdueTime(),
-                        execution.getCompletionTime(),
-                        null
-                )
-        );
+        log.debug("Dispatched new execution id={} homeworkId={} for user telegramId={}",
+                execution.getId(), execution.getHomeworkId(), user.getTelegramId());
 
-        log.debug(
-                "Dispatched auto homework execution id={} homeworkId={} for user telegramId={}",
-                execution.getId(),
-                execution.getHomeworkId(),
-                user.getTelegramId()
+        publishEvent(execution);
+    }
+
+    private void publishEvent(HomeworkExecution execution) {
+        homeworkExecutionSpan.run(execution, () ->
+                outboxEventPublisher.publish(
+                        AGGREGATE_TYPE,
+                        execution.getId().toString(),
+                        EVENT_TYPE,
+                        kafkaProperties.homeworkExecutionTopic(),
+                        new HomeworkExecutionEvent(
+                                execution.getId(),
+                                execution.getTheme(),
+                                execution.getSpecId(),
+                                execution.getStatus(),
+                                execution.getComment(),
+                                execution.getGroupId(),
+                                execution.getTeachId(),
+                                execution.getNameSpec(),
+                                execution.getCreatedAt(),
+                                execution.getHomeworkId(),
+                                execution.getTeacherFio(),
+                                execution.getHomeworkUrl(),
+                                execution.getOverdueTime(),
+                                execution.getCompletionTime()
+                        )
+                )
         );
     }
 }

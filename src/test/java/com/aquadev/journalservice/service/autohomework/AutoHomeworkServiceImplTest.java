@@ -37,14 +37,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -64,6 +57,8 @@ class AutoHomeworkServiceImplTest {
     KafkaTopicProperties kafkaProperties;
     @Mock
     JournalApiProperties journalApiProperties;
+    @Mock
+    com.aquadev.journalservice.tracing.HomeworkExecutionSpan homeworkExecutionSpan;
 
     @InjectMocks
     AutoHomeworkServiceImpl service;
@@ -199,13 +194,17 @@ class AutoHomeworkServiceImplTest {
                 .thenReturn(List.of(hw));
         when(journalClient.getHomeworks(1, JournalHomeworkStatus.EXPIRED.getId(), 0, 10, 5))
                 .thenReturn(List.of());
-        when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(false);
+        when(homeworkExecutionRepository.findByUserAndHomeworkId(user, 1L)).thenReturn(Optional.empty());
         when(homeworkExecutionRepository.saveAndFlush(any())).thenAnswer(inv -> {
             HomeworkExecution e = inv.getArgument(0);
             e.setId(UUID.randomUUID());
             return e;
         });
         when(kafkaProperties.homeworkExecutionTopic()).thenReturn("topic");
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(1)).run();
+            return null;
+        }).when(homeworkExecutionSpan).run(any(), any());
         when(journalApiProperties.journalUrl()).thenReturn("http://api");
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
@@ -226,11 +225,11 @@ class AutoHomeworkServiceImplTest {
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, null);
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(eq(1), eq(JournalHomeworkStatus.EXPIRED.getId()), eq(0), anyInt(), anyInt()))
                 .thenReturn(List.of(hw));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(eq(1), eq(JournalHomeworkStatus.EXPIRED.getId()), eq(0), anyInt(), anyInt()))
                 .thenReturn(List.of());
-        when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(true);
+        when(homeworkExecutionRepository.findByUserAndHomeworkId(user, 1L)).thenReturn(Optional.of(new HomeworkExecution()));
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
                 .call(() -> {
@@ -249,17 +248,21 @@ class AutoHomeworkServiceImplTest {
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L));
 
         JournalHomeworkResponse matchingHw = makeHomework(1, 5, 3, 10, null);
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(eq(1), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), eq(0), anyInt(), anyInt()))
                 .thenReturn(List.of(matchingHw));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(eq(1), eq(JournalHomeworkStatus.EXPIRED.getId()), eq(0), anyInt(), anyInt()))
                 .thenReturn(List.of());
-        when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(false);
+        when(homeworkExecutionRepository.findByUserAndHomeworkId(user, 1L)).thenReturn(Optional.empty());
         when(homeworkExecutionRepository.saveAndFlush(any())).thenAnswer(inv -> {
             HomeworkExecution e = inv.getArgument(0);
             e.setId(UUID.randomUUID());
             return e;
         });
         when(kafkaProperties.homeworkExecutionTopic()).thenReturn("topic");
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(1)).run();
+            return null;
+        }).when(homeworkExecutionSpan).run(any(), any());
         when(journalApiProperties.journalUrl()).thenReturn("http://api");
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
@@ -344,11 +347,11 @@ class AutoHomeworkServiceImplTest {
 
         // filePath is relative — should be prefixed with journalUrl
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, "/files/hw.pdf");
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(eq(1), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), eq(0), anyInt(), anyInt()))
                 .thenReturn(List.of(hw));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(eq(1), eq(JournalHomeworkStatus.EXPIRED.getId()), eq(0), anyInt(), anyInt()))
                 .thenReturn(List.of());
-        when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(false);
+        when(homeworkExecutionRepository.findByUserAndHomeworkId(user, 1L)).thenReturn(Optional.empty());
         when(journalApiProperties.journalUrl()).thenReturn("https://journal.example.com");
         when(homeworkExecutionRepository.saveAndFlush(any())).thenAnswer(inv -> {
             HomeworkExecution e = inv.getArgument(0);
@@ -356,6 +359,10 @@ class AutoHomeworkServiceImplTest {
             return e;
         });
         when(kafkaProperties.homeworkExecutionTopic()).thenReturn("topic");
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(1)).run();
+            return null;
+        }).when(homeworkExecutionSpan).run(any(), any());
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
                 .call(() -> {
@@ -375,17 +382,21 @@ class AutoHomeworkServiceImplTest {
         UserAutoHomeworkSettings settings = buildSettings(user, true, Set.of(5L)); // Fix: Added specId=5L
 
         JournalHomeworkResponse hw = makeHomework(1, 5, 3, 10, "https://cdn.example.com/hw.pdf");
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(eq(1), eq(JournalHomeworkStatus.NOT_COMPLETED.getId()), eq(0), anyInt(), anyInt()))
                 .thenReturn(List.of(hw));
-        when(journalClient.getHomeworks(anyInt(), eq(JournalHomeworkStatus.EXPIRED.getId()), anyInt(), anyInt(), anyInt()))
+        when(journalClient.getHomeworks(eq(1), eq(JournalHomeworkStatus.EXPIRED.getId()), eq(0), anyInt(), anyInt()))
                 .thenReturn(List.of());
-        when(homeworkExecutionRepository.existsByUserAndHomeworkId(user, 1L)).thenReturn(false);
+        when(homeworkExecutionRepository.findByUserAndHomeworkId(user, 1L)).thenReturn(Optional.empty());
         when(homeworkExecutionRepository.saveAndFlush(any())).thenAnswer(inv -> {
             HomeworkExecution e = inv.getArgument(0);
             e.setId(UUID.randomUUID());
             return e;
         });
         when(kafkaProperties.homeworkExecutionTopic()).thenReturn("topic");
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(1)).run();
+            return null;
+        }).when(homeworkExecutionSpan).run(any(), any());
 
         ScopedValue.where(TelegramUserContext.TG_USER_ID, TELEGRAM_ID)
                 .call(() -> {

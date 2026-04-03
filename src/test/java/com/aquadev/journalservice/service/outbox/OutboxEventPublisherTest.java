@@ -1,7 +1,6 @@
 package com.aquadev.journalservice.service.outbox;
 
 import com.aquadev.journalservice.model.OutboxEvent;
-import com.aquadev.journalservice.model.OutboxStatus;
 import com.aquadev.journalservice.repository.OutboxEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +12,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OutboxEventPublisherTest {
@@ -47,20 +52,12 @@ class OutboxEventPublisherTest {
         assertThat(saved.getAggregateId()).isEqualTo("agg-1");
         assertThat(saved.getEventType()).isEqualTo("Created");
         assertThat(saved.getTopic()).isEqualTo("topic-name");
-        assertThat(saved.getStatus()).isEqualTo(OutboxStatus.NEW);
         assertThat(saved.getPayload()).contains("value");
         assertThat(saved.getId()).isNull(); // must be null for JPA @GeneratedValue
     }
 
     @Test
     void publish_nonSerializablePayload_throwsIllegalState() {
-        // ObjectMapper cannot serialize objects with circular references
-        Object circular = new Object() {
-            // Override toString to prevent default serialization issues
-            @Override
-            public String toString() { return "circular"; }
-        };
-
         // Replace objectMapper with a broken one that always fails
         ObjectMapper brokenMapper = mock(ObjectMapper.class);
         try {
@@ -71,7 +68,7 @@ class OutboxEventPublisherTest {
         }
         ReflectionTestUtils.setField(publisher, "objectMapper", brokenMapper);
 
-        assertThatThrownBy(() -> publisher.publish("T", "id", "evt", "topic", circular))
+        assertThatThrownBy(() -> publisher.publish("T", "id", "evt", "topic", new Object()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Failed to serialize outbox payload");
 
