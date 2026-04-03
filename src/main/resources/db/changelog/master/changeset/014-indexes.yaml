@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 014-indexes-1
+      author: aqua
+      changes:
+        - createIndex:
+            indexName: idx_homework_execution_user_id
+            tableName: homework_execution
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            indexName: idx_homework_execution_status
+            tableName: homework_execution
+            columns:
+              - column:
+                  name: status
+        - createIndex:
+            indexName: idx_homework_execution_homework_id
+            tableName: homework_execution
+            columns:
+              - column:
+                  name: homework_id

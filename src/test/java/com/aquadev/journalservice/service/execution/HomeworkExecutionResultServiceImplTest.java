@@ -22,11 +22,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class HomeworkExecutionResultServiceImplTest {
@@ -49,7 +45,7 @@ class HomeworkExecutionResultServiceImplTest {
         HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
                 executionId,
                 HomeworkExecutionStatus.DONE,
-                "s3-key",
+                "hw-00000000-0000-0000-0000-000000000000-test.pdf",
                 null,
                 null,
                 Instant.now()
@@ -58,7 +54,7 @@ class HomeworkExecutionResultServiceImplTest {
         HomeworkExecution execution = new HomeworkExecution();
         execution.setId(executionId);
         execution.setHomeworkId(42L);
-        execution.setResultS3Key("s3-key");
+        execution.setResultS3Key("hw-00000000-0000-0000-0000-000000000000-test.pdf");
 
         ExecutionWithTelegramId result = new ExecutionWithTelegramId(execution, 12345L);
 
@@ -72,7 +68,7 @@ class HomeworkExecutionResultServiceImplTest {
 
         resultService.handleEvent(event);
 
-        verify(journalClient).uploadHomework(eq(42L), any(InputStream.class), eq((long) content.length));
+        verify(journalClient).uploadHomework(eq(42L), any(InputStream.class), eq((long) content.length), any());
     }
 
     @Test
@@ -95,7 +91,7 @@ class HomeworkExecutionResultServiceImplTest {
 
         resultService.handleEvent(event);
 
-        verify(journalClient, never()).uploadHomework(any(), any(), anyLong());
+        verify(journalClient, never()).uploadHomework(any(), any(), anyLong(), any());
         verify(journalClient, never()).uploadHomeworkText(any(), any());
         verify(persistenceService, never()).updateStatusToFailed(any());
     }
@@ -132,7 +128,7 @@ class HomeworkExecutionResultServiceImplTest {
         HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
                 executionId,
                 HomeworkExecutionStatus.DONE,
-                "s3-key",
+                "hw-00000000-0000-0000-0000-000000000000-test.pdf",
                 null,
                 null,
                 Instant.now()
@@ -141,7 +137,7 @@ class HomeworkExecutionResultServiceImplTest {
         HomeworkExecution execution = new HomeworkExecution();
         execution.setId(executionId);
         execution.setHomeworkId(55L);
-        execution.setResultS3Key("s3-key");
+        execution.setResultS3Key("hw-00000000-0000-0000-0000-000000000000-test.pdf");
 
         when(persistenceService.updateExecutionBaseInfo(event))
                 .thenReturn(new ExecutionWithTelegramId(execution, 12345L));
@@ -151,7 +147,7 @@ class HomeworkExecutionResultServiceImplTest {
         ResponseBytes<GetObjectResponse> responseBytes = mock(ResponseBytes.class);
         when(responseBytes.asByteArray()).thenReturn(content);
         when(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).thenReturn(responseBytes);
-        when(journalClient.uploadHomework(any(), any(), anyLong()))
+        when(journalClient.uploadHomework(any(), any(), anyLong(), any()))
                 .thenThrow(new RuntimeException("Journal unavailable"));
 
         resultService.handleEvent(event);
@@ -165,7 +161,7 @@ class HomeworkExecutionResultServiceImplTest {
         HomeworkExecutionResultEvent event = new HomeworkExecutionResultEvent(
                 executionId,
                 HomeworkExecutionStatus.DONE,
-                "s3-key",
+                "hw-00000000-0000-0000-0000-000000000000-test.pdf",
                 null,
                 null,
                 Instant.now()
@@ -173,7 +169,7 @@ class HomeworkExecutionResultServiceImplTest {
 
         HomeworkExecution execution = new HomeworkExecution();
         execution.setId(executionId);
-        execution.setResultS3Key("s3-key");
+        execution.setResultS3Key("hw-00000000-0000-0000-0000-000000000000-test.pdf");
 
         ExecutionWithTelegramId result = new ExecutionWithTelegramId(execution, 12345L);
 
