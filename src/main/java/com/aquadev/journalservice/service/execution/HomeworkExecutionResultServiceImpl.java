@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.ByteArrayInputStream;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -62,6 +63,11 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
             log.error("Failed to process journal upload for execution {}. Setting status to FAILED.", event.executionId(), e);
             persistenceService.updateStatusToFailed(event.executionId());
         }
+    }
+
+    @Override
+    public void updateStatusToFailed(UUID executionId) {
+        persistenceService.updateStatusToFailed(executionId);
     }
 
     private void processJournalUpload(@NonNull HomeworkExecution execution) {

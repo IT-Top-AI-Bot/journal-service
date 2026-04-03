@@ -55,8 +55,7 @@ public class JournalServiceImpl implements JournalService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<JournalHomeworkResponse> getHomeworksForUser(Integer page, Integer status, Integer type) {
+    public Long getCurrentGroupId() {
         Long telegramId = TelegramUserContext.get();
         User user = userRepository.findByTelegramId(telegramId)
                 .orElseThrow(UserNotFoundException::new);
@@ -64,11 +63,15 @@ public class JournalServiceImpl implements JournalService {
         JournalUser journalUser = Optional.ofNullable(user.getJournalUser())
                 .orElseThrow(UserNotFoundException::new);
 
-        Long groupIdToUse = journalUser.getJournalGroups().stream()
+        return journalUser.getJournalGroups().stream()
                 .map(JournalGroup::getJournalGroupId)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+    }
 
+    @Override
+    public List<JournalHomeworkResponse> getHomeworksForUser(Integer page, Integer status, Integer type) {
+        Long groupIdToUse = getCurrentGroupId();
         return journalClient.getHomeworks(page, status, type, groupIdToUse.intValue(), null);
     }
 
@@ -117,7 +120,7 @@ public class JournalServiceImpl implements JournalService {
     }
 
     @Override
-    @Cacheable(value = "groupSpecs", cacheManager = "dailyCache")
+    @Cacheable(value = "groupSpecs", cacheManager = "dailyCache", key = "@journalServiceImpl.getCurrentGroupId()")
     public List<JournalSpecResponse> getGroupSpecs() {
         return journalClient.getGroupSpecs();
     }

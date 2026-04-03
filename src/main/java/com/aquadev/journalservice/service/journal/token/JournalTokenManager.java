@@ -63,7 +63,7 @@ public class JournalTokenManager {
         Boolean locked = redis.opsForValue().setIfAbsent(lockKey, "1", LOCK_TTL);
 
         if (!Boolean.TRUE.equals(locked)) {
-            LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(120));
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(120));
             String cached = redis.opsForValue().get(JournalRedisKeys.accessToken(journalUserId));
             if (cached != null) return cached;
 

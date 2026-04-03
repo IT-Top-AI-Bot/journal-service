@@ -17,6 +17,8 @@ public interface JournalService {
 
     List<JournalCountHomeworkResponse> getCountHomework();
 
+    Long getCurrentGroupId();
+
     List<JournalHomeworkResponse> getHomeworksForUser(Integer page, Integer status, Integer type);
 
     HomeworkExecution executeHomework(HomeworkExecutionRequest request);

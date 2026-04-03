@@ -3,6 +3,7 @@ package com.aquadev.journalservice.config.redis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.lettuce.core.resource.ClientResources;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -15,13 +16,23 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
+    @Value("${spring.redis.host:localhost}")
+    private String redisHost;
+
+    @Value("${spring.redis.port:6379}")
+    private int redisPort;
+
+    @Bean(destroyMethod = "shutdown")
+    public ClientResources clientResources() {
+        return ClientResources.builder().build();
+    }
+
     @Bean
-    public LettuceConnectionFactory lettuceConnectionFactory() {
-        ClientResources clientResources = ClientResources.builder().build();
+    public LettuceConnectionFactory lettuceConnectionFactory(ClientResources clientResources) {
         LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
                 .clientResources(clientResources)
                 .build();
-        return new LettuceConnectionFactory(new RedisStandaloneConfiguration(), clientConfig);
+        return new LettuceConnectionFactory(new RedisStandaloneConfiguration(redisHost, redisPort), clientConfig);
     }
 
     @Bean

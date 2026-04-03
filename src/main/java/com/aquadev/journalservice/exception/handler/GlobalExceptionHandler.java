@@ -75,19 +75,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpClientErrorException.class)
     public ResponseEntity<ErrorResponse> handleJournalClientError(HttpClientErrorException ex, HttpServletRequest request) {
         int code = ex.getStatusCode().value();
-        return switch (code) {
-            case 401, 403, 422 -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(
-                    Instant.now(), HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+        if (ex.getStatusCode().is4xxClientError()) {
+            return ResponseEntity.status(ex.getStatusCode()).body(new ErrorResponse(
+                    Instant.now(), code, HttpStatus.valueOf(code).getReasonPhrase(),
                     extractJournalErrorMessage(ex.getResponseBodyAsString()), request.getRequestURI(), List.of()
             ));
-            default -> {
-                log.error("[JournalAPI] Unexpected {} response: {}", code, ex.getResponseBodyAsString());
-                yield ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(
-                        Instant.now(), HttpStatus.BAD_GATEWAY.value(), HttpStatus.BAD_GATEWAY.getReasonPhrase(),
-                        "Unexpected error from Journal API", request.getRequestURI(), List.of()
-                ));
-            }
-        };
+        } else {
+            log.error("[JournalAPI] Unexpected {} response: {}", code, ex.getResponseBodyAsString());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(
+                    Instant.now(), HttpStatus.BAD_GATEWAY.value(), HttpStatus.BAD_GATEWAY.getReasonPhrase(),
+                    "Unexpected error from Journal API", request.getRequestURI(), List.of()
+            ));
+        }
     }
 
     @ExceptionHandler(HttpServerErrorException.class)
