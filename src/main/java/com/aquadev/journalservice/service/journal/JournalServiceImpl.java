@@ -13,8 +13,6 @@ import com.aquadev.journalservice.dto.response.JournalUserResponse;
 import com.aquadev.journalservice.exception.domain.user.UserNotFoundException;
 import com.aquadev.journalservice.mapper.HomeworkExecutionMapper;
 import com.aquadev.journalservice.model.HomeworkExecution;
-import com.aquadev.journalservice.model.JournalGroup;
-import com.aquadev.journalservice.model.JournalUser;
 import com.aquadev.journalservice.model.User;
 import com.aquadev.journalservice.repository.HomeworkExecutionRepository;
 import com.aquadev.journalservice.repository.UserRepository;
@@ -27,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +35,7 @@ public class JournalServiceImpl implements JournalService {
 
     private final JournalClient journalClient;
     private final UserRepository userRepository;
+    private final UserGroupService userGroupService;
     private final HomeworkExecutionMapper homeworkExecutionMapper;
     private final HomeworkExecutionRepository homeworkExecutionRepository;
     private final OutboxEventPublisher outboxEventPublisher;
@@ -56,22 +54,12 @@ public class JournalServiceImpl implements JournalService {
 
     @Override
     public Long getCurrentGroupId() {
-        Long telegramId = TelegramUserContext.get();
-        User user = userRepository.findByTelegramId(telegramId)
-                .orElseThrow(UserNotFoundException::new);
-
-        JournalUser journalUser = Optional.ofNullable(user.getJournalUser())
-                .orElseThrow(UserNotFoundException::new);
-
-        return journalUser.getJournalGroups().stream()
-                .map(JournalGroup::getJournalGroupId)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+        return userGroupService.getCurrentGroupId();
     }
 
     @Override
     public List<JournalHomeworkResponse> getHomeworksForUser(Integer page, Integer status, Integer type) {
-        Long groupIdToUse = getCurrentGroupId();
+        Long groupIdToUse = userGroupService.getCurrentGroupId();
         return journalClient.getHomeworks(page, status, type, groupIdToUse.intValue(), null);
     }
 
@@ -120,7 +108,7 @@ public class JournalServiceImpl implements JournalService {
     }
 
     @Override
-    @Cacheable(value = "groupSpecs", cacheManager = "dailyCache", key = "@journalServiceImpl.getCurrentGroupId()")
+    @Cacheable(value = "groupSpecs", cacheManager = "dailyCache", key = "@userGroupService.getCurrentGroupId()")
     public List<JournalSpecResponse> getGroupSpecs() {
         return journalClient.getGroupSpecs();
     }
