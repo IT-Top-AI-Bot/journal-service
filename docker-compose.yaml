@@ -64,15 +64,16 @@ services:
     labels:
       amplicode.image: confluent/kafka
 
-  kafkaui:
-    image: provectuslabs/kafka-ui:v0.7.2
+  kafbat-ui:
+    image: kafbat/kafka-ui:latest
     restart: "no"
+    container_name: kafbat-ui
     ports:
       - "8989:8080"
+    volumes:
+      - ./infra/kafbat/dynamic_config.yaml:/etc/kafkaui/dynamic_config.yaml:ro
     environment:
       DYNAMIC_CONFIG_ENABLED: "true"
-      KAFKA_CLUSTERS_0_NAME: kLXNtzAfTcSlJbOgjTiYwA
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit -1
       interval: 10s

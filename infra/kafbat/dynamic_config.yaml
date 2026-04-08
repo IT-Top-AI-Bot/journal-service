@@ -1,0 +1,4 @@
+kafka:
+  clusters:
+    - name: kLXNtzAfTcSlJbOgjTiYwA
+      bootstrapServers: kafka:29092
