@@ -1,7 +1,13 @@
 package com.aquadev.journalservice.model;
 
 import com.aquadev.journalservice.generator.GeneratedUuidV7;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,7 +36,7 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private JournalUser journalUser;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private JournalCredential journalCredential;
 
     @CreationTimestamp

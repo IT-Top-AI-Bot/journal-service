@@ -64,21 +64,19 @@ services:
     labels:
       amplicode.image: confluent/kafka
 
-  kafbat-ui:
-    image: kafbat/kafka-ui:latest
+  akhq:
+    image: tchiotludo/akhq:latest
     restart: "no"
-    container_name: kafbat-ui
+    container_name: akhq
     ports:
       - "8989:8080"
     volumes:
-      - ./infra/kafbat/dynamic_config.yaml:/etc/kafkaui/dynamic_config.yaml:ro
-    environment:
-      DYNAMIC_CONFIG_ENABLED: "true"
+      - ./infra/akhq/application.yaml:/app/application.yml:ro
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit -1
+      test: curl --fail -s http://localhost:8080/health || exit 1
       interval: 10s
       timeout: 5s
-      start_period: 60s
+      start_period: 30s
       retries: 5
     depends_on:
       - kafka
