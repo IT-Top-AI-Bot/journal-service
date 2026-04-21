@@ -1,0 +1,19 @@
+{
+  "priority": 10,
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v2/homework/operations/delete",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": "null"
+  }
+}

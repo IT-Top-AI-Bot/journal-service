@@ -1,0 +1,29 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v2/count/homework",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    },
+    "queryParameters": {
+      "group_id": {
+        "doesNotMatch": "^2651$"
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "jsonBody": [
+      {
+        "field": "group_id",
+        "message": "Группа не найдена"
+      }
+    ]
+  }
+}

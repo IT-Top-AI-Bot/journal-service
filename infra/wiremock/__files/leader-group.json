@@ -1,0 +1,23 @@
+[
+  {
+    "amount": 8064,
+    "id": 43601,
+    "full_name": "Дичинская Анастасия Дмитриевна",
+    "photo_path": "https://fs.top-academy.ru/api/v1/files/1_-zKMALN-1EggvGYokXPDQmYRLas7c0",
+    "position": 1
+  },
+  {
+    "amount": 3639,
+    "id": 44551,
+    "full_name": "Белоусов Евгений Васильевич",
+    "photo_path": null,
+    "position": 12
+  },
+  {
+    "amount": 2603,
+    "id": 40274,
+    "full_name": "Ворончихин Иван Романович",
+    "photo_path": "https://fs.top-academy.ru/api/v1/files/hLyVqzabnDyXaHEsW3_l_6U9I_MNtIwu",
+    "position": 15
+  }
+]

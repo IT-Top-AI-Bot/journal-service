@@ -1,0 +1,22 @@
+{
+  "priority": 50,
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v2/homework/operations/list",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "bodyFileName": "homework-list-mixed.json.hbs"
+  }
+}

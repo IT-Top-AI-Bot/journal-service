@@ -1,0 +1,30 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPattern": "/api/v2/homework/operations/list.*(spec_id\\[\\]=1281|spec_id%5B%5D=1281).*",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "transformerParameters": {
+      "specId": 1281,
+      "teacherId": 1702,
+      "teacherName": "Елисеева Анастасия Александровна",
+      "specName": "Язык сценариев Javascript и библиотека jQuery (ИС)",
+      "shortTheme": "JavaScript и jQuery",
+      "comment": "Реализовать интерактивный интерфейс"
+    },
+    "bodyFileName": "homework-list-single-spec.json.hbs"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPattern": "/api/v2/homework/operations/list.*(spec_id\\[\\]=1628|spec_id%5B%5D=1628).*",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "transformerParameters": {
+      "specId": 1628,
+      "teacherId": 2005,
+      "teacherName": "Васильев Роман Сергеевич",
+      "specName": "ОГСЭ.05  Физическая культура",
+      "shortTheme": "физической культуры",
+      "comment": "Сдать дневник самоподготовки"
+    },
+    "bodyFileName": "homework-list-single-spec.json.hbs"
+  }
+}

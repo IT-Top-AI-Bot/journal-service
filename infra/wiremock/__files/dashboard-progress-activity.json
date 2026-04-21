@@ -1,0 +1,38 @@
+[
+  {
+    "date": "2026-04-18 12:36:57",
+    "action": 1,
+    "current_point": 1,
+    "point_types_id": 1,
+    "point_types_name": "DIAMOND",
+    "achievements_id": 9,
+    "achievements_name": "HOMETASK_INTIME",
+    "achievements_type": 1,
+    "badge": 0,
+    "old_competition": false
+  },
+  {
+    "date": "2026-04-14 14:34:48",
+    "action": 1,
+    "current_point": 15,
+    "point_types_id": 2,
+    "point_types_name": "COIN",
+    "achievements_id": 20,
+    "achievements_name": "ASSESMENT",
+    "achievements_type": 1,
+    "badge": 0,
+    "old_competition": false
+  },
+  {
+    "date": "2026-03-23 03:45:59",
+    "action": 0,
+    "current_point": 1,
+    "point_types_id": 2,
+    "point_types_name": "COIN",
+    "achievements_id": 28,
+    "achievements_name": "AUTO_MARK_EXPIRED_HOMEWORK",
+    "achievements_type": 1,
+    "badge": 0,
+    "old_competition": false
+  }
+]

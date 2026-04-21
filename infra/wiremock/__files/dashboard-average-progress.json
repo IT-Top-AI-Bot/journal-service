@@ -1,0 +1,20 @@
+[
+  {
+    "date": "2025-10-01",
+    "points": 3,
+    "previous_points": null,
+    "has_rasp": null
+  },
+  {
+    "date": "2025-11-01",
+    "points": 3,
+    "previous_points": 3,
+    "has_rasp": null
+  },
+  {
+    "date": "2026-04-01",
+    "points": 4,
+    "previous_points": 3,
+    "has_rasp": null
+  }
+]

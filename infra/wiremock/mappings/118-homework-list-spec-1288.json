@@ -1,0 +1,30 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPattern": "/api/v2/homework/operations/list.*(spec_id\\[\\]=1288|spec_id%5B%5D=1288).*",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "transformerParameters": {
+      "specId": 1288,
+      "teacherId": 1601,
+      "teacherName": "Власов Даниил Сергеевич",
+      "specName": "Обеспечение качества функционирования компьютерных систем  (ИС)",
+      "shortTheme": "обеспечения качества функционирования",
+      "comment": "Подготовить схему защиты"
+    },
+    "bodyFileName": "homework-list-single-spec.json.hbs"
+  }
+}

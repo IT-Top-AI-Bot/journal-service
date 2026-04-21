@@ -1,0 +1,22 @@
+{
+  "priority": 10,
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v2/homework/operations/create",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "body": "{\n  \"id\": 3403574,\n  \"filename\": null,\n  \"file_path\": \"https://fs.top-academy.ru/api/v1/files/0cMo9uas4mJwbkHU3ldWkZkutkzDqMSe\",\n  \"tmp_file\": null,\n  \"mark\": null,\n  \"creation_time\": \"2026-04-19\",\n  \"stud_answer\": {{#if request.parts.answerText}}{{toJson request.parts.answerText.body}}{{else}}null{{/if}},\n  \"auto_mark\": false\n}"
+  }
+}

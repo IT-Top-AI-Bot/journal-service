@@ -1,0 +1,30 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPattern": "/api/v2/homework/operations/list.*(spec_id\\[\\]=1593|spec_id%5B%5D=1593).*",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "transformerParameters": {
+      "specId": 1593,
+      "teacherId": 1904,
+      "teacherName": "Китрис Наталья Сергеевна",
+      "specName": "Учебная практика    УП. ПМ.03 (ИС)",
+      "shortTheme": "учебной практики ПМ.03",
+      "comment": "Сдать конфигурацию среды"
+    },
+    "bodyFileName": "homework-list-single-spec.json.hbs"
+  }
+}

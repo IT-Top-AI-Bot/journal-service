@@ -1,0 +1,47 @@
+[
+  {
+    "teacher": null,
+    "mark": 0,
+    "mark_type": 0,
+    "date": null,
+    "ex_file_name": null,
+    "id_file": 0,
+    "exam_id": 18923,
+    "file_path": null,
+    "comment_teach": null,
+    "need_access": 1,
+    "need_access_stud": null,
+    "comment_delete_file": null,
+    "spec": "Производственная практика  ПП ПМ.03 (ИС)"
+  },
+  {
+    "teacher": "Таштанов Вейсал Алишерович",
+    "mark": 4,
+    "mark_type": 1,
+    "date": "2026-04-16",
+    "ex_file_name": null,
+    "id_file": 0,
+    "exam_id": 18400,
+    "file_path": null,
+    "comment_teach": null,
+    "need_access": 1,
+    "need_access_stud": null,
+    "comment_delete_file": null,
+    "spec": "Инструментальные средства разработки программного обеспечения (ИС)"
+  },
+  {
+    "teacher": "Механцев Борис Евгеньевич",
+    "mark": 4,
+    "mark_type": 1,
+    "date": "2026-04-08",
+    "ex_file_name": null,
+    "id_file": 56014,
+    "exam_id": 18384,
+    "file_path": "https://fs.top-academy.ru/api/v1/files/_YM6x5sTpggwV-cIlD5zICnr8vcPK6sq",
+    "comment_teach": "",
+    "need_access": 1,
+    "need_access_stud": null,
+    "comment_delete_file": null,
+    "spec": "Математическое моделирование (ИС)"
+  }
+]

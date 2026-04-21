@@ -1,0 +1,30 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPattern": "/api/v2/homework/operations/list.*(spec_id\\[\\]=1158|spec_id%5B%5D=1158).*",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "transformerParameters": {
+      "specId": 1158,
+      "teacherId": 2106,
+      "teacherName": "Кулешов Игорь Геннадьевич",
+      "specName": "Иностранный язык в профессиональной деятельности (ИС)",
+      "shortTheme": "иностранного языка в профессиональной деятельности",
+      "comment": "Подготовить письменный ответ"
+    },
+    "bodyFileName": "homework-list-single-spec.json.hbs"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v2/auth/login",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$[?(@.application_key == 'deleted')]"
+      }
+    ]
+  },
+  "response": {
+    "status": 410,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "jsonBody": {
+      "name": "Gone",
+      "message": "Application with key \"deleted\" was deleted",
+      "code": 0,
+      "status": 410
+    }
+  }
+}

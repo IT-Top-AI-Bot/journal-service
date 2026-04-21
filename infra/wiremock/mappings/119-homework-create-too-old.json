@@ -1,0 +1,32 @@
+{
+  "priority": 2,
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v2/homework/operations/create",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer mock-access-token"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "contains": "name=\"id\""
+      },
+      {
+        "contains": "204182"
+      }
+    ]
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "jsonBody": {
+      "name": "Unprocessable entity",
+      "message": "Can't save homework",
+      "code": 3002,
+      "status": 422
+    }
+  }
+}

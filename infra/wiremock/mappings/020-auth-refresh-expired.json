@@ -1,0 +1,24 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v2/auth/refresh",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$[?(@.refresh_token == 'expired')]"
+      }
+    ]
+  },
+  "response": {
+    "status": 410,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "jsonBody": {
+      "name": "Gone",
+      "message": "Your refresh token is not found or expired, please check your auth credentials and try to authenticate",
+      "code": 0,
+      "status": 410
+    }
+  }
+}
