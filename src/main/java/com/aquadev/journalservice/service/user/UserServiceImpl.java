@@ -1,6 +1,6 @@
 package com.aquadev.journalservice.service.user;
 
-import com.aquadev.journalservice.client.journal.JournalClient;
+import com.aquadev.journalservice.client.journal.JournalUserInfoClient;
 import com.aquadev.journalservice.dto.request.CreateUserRequest;
 import com.aquadev.journalservice.dto.response.JournalTokenResponse;
 import com.aquadev.journalservice.dto.response.JournalUserResponse;
@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
-    private final JournalClient journalClient;
+    private final JournalUserInfoClient journalUserInfoClient;
     private final UserRepository userRepository;
     private final JournalUserMapper journalUserMapper;
     private final JournalAuthService journalAuthService;
@@ -67,7 +67,7 @@ public class UserServiceImpl implements UserService {
         journalUserIdResolver.put(telegramId, journalUserId);
         userRepository.saveAndFlush(user);
 
-        JournalUserResponse currentUser = journalClient.getCurrentUser();
+        JournalUserResponse currentUser = journalUserInfoClient.getCurrentUser();
         user.setJournalUser(journalUserMapper.toEntity(currentUser, journalUserId));
         return userRepository.save(user);
     }
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
         journalTokenManager.storeTokens(journalUserId, token);
         journalUserIdResolver.put(telegramId, journalUserId);
 
-        JournalUserResponse currentUser = journalClient.getCurrentUser();
+        JournalUserResponse currentUser = journalUserInfoClient.getCurrentUser();
         user.setJournalUser(journalUserMapper.toEntity(currentUser, journalUserId));
         return userRepository.save(user);
     }

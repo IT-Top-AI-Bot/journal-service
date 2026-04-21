@@ -5,6 +5,7 @@ import com.aquadev.journalservice.dto.response.ValidationErrorResponse;
 import com.aquadev.journalservice.exception.base.ConflictException;
 import com.aquadev.journalservice.exception.base.ForbiddenException;
 import com.aquadev.journalservice.exception.base.NotFoundException;
+import com.aquadev.journalservice.exception.domain.journal.JournalAuthenticationException;
 import com.aquadev.journalservice.mapper.ExceptionMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +65,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(ConflictException.class)
     public ErrorResponse handleConflictException(ConflictException ex, HttpServletRequest request) {
+        return exceptionMapper.toErrorResponse(ex, request.getRequestURI());
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(JournalAuthenticationException.class)
+    public ErrorResponse handleJournalAuthenticationException(JournalAuthenticationException ex, HttpServletRequest request) {
         return exceptionMapper.toErrorResponse(ex, request.getRequestURI());
     }
 

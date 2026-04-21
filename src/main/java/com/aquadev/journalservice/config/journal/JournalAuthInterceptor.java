@@ -1,6 +1,6 @@
 package com.aquadev.journalservice.config.journal;
 
-import com.aquadev.journalservice.exception.domain.journal.JournalCredentialsInvalidException;
+import com.aquadev.journalservice.exception.domain.journal.JournalAuthenticationException;
 import com.aquadev.journalservice.repository.UserRepository;
 import com.aquadev.journalservice.service.journal.token.JournalTokenManager;
 import com.aquadev.journalservice.service.journal.token.JournalUserIdResolver;
@@ -45,19 +45,10 @@ public class JournalAuthInterceptor implements ClientHttpRequestInterceptor {
 
         long telegramUserId = SecurityUtil.getCurrentTelegramUserId();
         if (userRepositoryProvider.getObject().existsByTelegramIdAndJournalUserCredentialsInvalidTrue(telegramUserId)) {
-            throw new JournalCredentialsInvalidException();
+            throw JournalAuthenticationException.invalidCredentials();
         }
         long journalUserId = journalUserIdResolverProvider.getObject().resolve(telegramUserId);
-        String accessToken;
-        try {
-            accessToken = tokenManagerProvider.getObject().getValidAccessToken(journalUserId);
-        } catch (IllegalStateException ex) {
-            String msg = ex.getMessage();
-            if (msg != null && (msg.startsWith("Reauth required") || msg.startsWith("Missing credentials"))) {
-                throw new JournalCredentialsInvalidException();
-            }
-            throw ex;
-        }
+        String accessToken = tokenManagerProvider.getObject().getValidAccessToken(journalUserId);
         request.getHeaders().setBearerAuth(accessToken);
 
         var response = execution.execute(request, body);

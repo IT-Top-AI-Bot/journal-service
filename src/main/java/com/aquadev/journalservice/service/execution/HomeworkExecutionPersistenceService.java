@@ -21,7 +21,8 @@ class HomeworkExecutionPersistenceService {
 
     private final HomeworkExecutionRepository homeworkExecutionRepository;
 
-    record ExecutionWithTelegramId(HomeworkExecution execution, Long telegramId) {}
+    record ExecutionWithTelegramId(HomeworkExecution execution, Long telegramId, String resultFilename) {
+    }
 
     @Transactional
     public ExecutionWithTelegramId updateExecutionBaseInfo(@NonNull HomeworkExecutionResultEvent event) {
@@ -37,7 +38,7 @@ class HomeworkExecutionPersistenceService {
         Long telegramId = saved.getUser().getTelegramId();
 
         log.info("HomeworkExecution {} basic info updated", event.executionId());
-        return new ExecutionWithTelegramId(saved, telegramId);
+        return new ExecutionWithTelegramId(saved, telegramId, event.resultFilename());
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

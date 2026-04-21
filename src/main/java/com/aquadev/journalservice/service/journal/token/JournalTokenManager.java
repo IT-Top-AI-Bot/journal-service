@@ -2,6 +2,7 @@ package com.aquadev.journalservice.service.journal.token;
 
 import com.aquadev.journalservice.config.journal.JournalTokenProperties;
 import com.aquadev.journalservice.dto.response.JournalTokenResponse;
+import com.aquadev.journalservice.exception.domain.journal.JournalAuthenticationException;
 import com.aquadev.journalservice.model.JournalCredential;
 import com.aquadev.journalservice.model.JournalToken;
 import com.aquadev.journalservice.repository.JournalCredentialRepository;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -49,7 +49,7 @@ public class JournalTokenManager {
         }
 
         if (t.isReauthRequired()) {
-            throw new IllegalStateException("Reauth required for journalUserId=" + journalUserId);
+            throw JournalAuthenticationException.reauthRequired();
         }
 
         if (t.getAccessExpiresAt().isAfter(Instant.now().plus(refreshWindow()))) {
@@ -142,17 +142,17 @@ public class JournalTokenManager {
         }
     }
 
-    private String reauthAndStore(long journalUserId) throws HttpClientErrorException {
+    private String reauthAndStore(long journalUserId) {
         JournalCredential credential = credentialRepository.findByJournalUserId(journalUserId)
                 .orElseThrow(() -> {
                     markReauthRequired(journalUserId);
-                    return new IllegalStateException("Missing credentials for journalUserId=" + journalUserId);
+                    return JournalAuthenticationException.missingCredentials();
                 });
 
         JournalTokenResponse token;
         try {
             token = journalAuthService.login(credential.getUsername(), credential.getPassword());
-        } catch (RuntimeException ex) {
+        } catch (JournalAuthenticationException ex) {
             markReauthRequired(journalUserId);
             throw ex;
         }
