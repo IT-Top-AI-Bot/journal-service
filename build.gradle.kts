@@ -52,7 +52,7 @@ repositories {
     }
 }
 
-val commonLibsVersion by extra("1.1.0")
+val commonLibsVersion by extra("1.3.0")
 val mapStructVersion by extra("1.6.3")
 val springDocVersion by extra("3.0.2")
 val resilience4jVersion by extra("2.4.0")
