@@ -1,0 +1,11 @@
+{
+  "id": 9001,
+  "id_dom_zad": 170001,
+  "id_stud": 123456,
+  "mark": 5,
+  "comment": "Отличная работа!",
+  "tags": [
+    "clean-code",
+    "oop"
+  ]
+}

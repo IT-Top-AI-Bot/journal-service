@@ -1,6 +1,5 @@
 package com.aquadev.journalservice.controller.telegram.autohomework;
 
-import com.aquadev.journalservice.config.telegram.TelegramUserContext;
 import com.aquadev.journalservice.dto.request.UpdateAutoHomeworkSettingsRequest;
 import com.aquadev.journalservice.dto.response.AutoHomeworkSettingsResponse;
 import com.aquadev.journalservice.service.autohomework.AutoHomeworkService;
@@ -32,7 +31,7 @@ public class AutoHomeworkControllerImpl implements AutoHomeworkController {
     @PutMapping("/settings")
     @ResponseStatus(HttpStatus.OK)
     public AutoHomeworkSettingsResponse updateSettings(@RequestBody UpdateAutoHomeworkSettingsRequest request) {
-        Long telegramId = TelegramUserContext.get();
+        long telegramId = SecurityUtil.getCurrentTelegramUserId();
         return autoHomeworkService.updateSettings(telegramId, request);
     }
 }

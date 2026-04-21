@@ -3,10 +3,10 @@ package com.aquadev.journalservice.service.journal;
 import com.aquadev.commonlibs.HomeworkExecutionEvent;
 import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.kafka.KafkaTopicProperties;
-import com.aquadev.journalservice.config.telegram.TelegramUserContext;
 import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
 import com.aquadev.journalservice.dto.response.JournalCountHomeworkResponse;
 import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
+import com.aquadev.journalservice.dto.response.JournalHomeworkStatus;
 import com.aquadev.journalservice.dto.response.JournalScheduleResponse;
 import com.aquadev.journalservice.dto.response.JournalSpecResponse;
 import com.aquadev.journalservice.dto.response.JournalUserResponse;
@@ -17,7 +17,9 @@ import com.aquadev.journalservice.model.User;
 import com.aquadev.journalservice.repository.HomeworkExecutionRepository;
 import com.aquadev.journalservice.repository.UserRepository;
 import com.aquadev.journalservice.service.outbox.OutboxEventPublisher;
+import com.aquadev.journalservice.service.user.group.UserGroupService;
 import com.aquadev.journalservice.tracing.HomeworkExecutionSpan;
+import com.aquadev.journalservice.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -49,7 +51,13 @@ public class JournalServiceImpl implements JournalService {
 
     @Override
     public List<JournalCountHomeworkResponse> getCountHomework() {
-        return journalClient.getCountHomework();
+        List<JournalCountHomeworkResponse> all = journalClient.getCountHomework(null, null);
+        if (all == null) {
+            return List.of();
+        }
+        return all.stream()
+                .filter(item -> item.counterTypeName() != JournalHomeworkStatus.NOT_COMPLETED)
+                .toList();
     }
 
     @Override
@@ -60,13 +68,13 @@ public class JournalServiceImpl implements JournalService {
     @Override
     public List<JournalHomeworkResponse> getHomeworksForUser(Integer page, Integer status, Integer type) {
         Long groupIdToUse = userGroupService.getCurrentGroupId();
-        return journalClient.getHomeworks(page, status, type, groupIdToUse.intValue(), null);
+        return journalClient.getHomeworks(page, status, type, groupIdToUse.intValue(), (Integer) null);
     }
 
     @Override
     @Transactional
     public HomeworkExecution executeHomework(HomeworkExecutionRequest request) {
-        Long telegramId = TelegramUserContext.get();
+        long telegramId = SecurityUtil.getCurrentTelegramUserId();
         User user = userRepository.findByTelegramId(telegramId)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -108,7 +116,7 @@ public class JournalServiceImpl implements JournalService {
     }
 
     @Override
-    @Cacheable(value = "groupSpecs", cacheManager = "dailyCache", key = "@userGroupService.getCurrentGroupId()")
+    @Cacheable(value = "groupSpecs", cacheManager = "dailyCache", key = "@userGroupServiceImpl.getCurrentGroupId()")
     public List<JournalSpecResponse> getGroupSpecs() {
         return journalClient.getGroupSpecs();
     }

@@ -6,19 +6,22 @@ import com.aquadev.journalservice.client.journal.JournalClient;
 import com.aquadev.journalservice.config.s3.S3BucketProperties;
 import com.aquadev.journalservice.config.telegram.TelegramUserContext;
 import com.aquadev.journalservice.exception.domain.homeworkexecution.HomeworkExecutionNotFoundException;
+import com.aquadev.journalservice.exception.domain.journal.JournalCredentialsInvalidException;
 import com.aquadev.journalservice.model.HomeworkExecution;
 import com.aquadev.journalservice.service.execution.HomeworkExecutionPersistenceService.ExecutionWithTelegramId;
+import com.aquadev.journalservice.service.journal.credential.JournalCredentialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.core.ResponseBytes;
+import org.springframework.web.client.HttpClientErrorException;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.UUID;
 
 @Slf4j
@@ -29,6 +32,7 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
     private final S3Client s3Client;
     private final JournalClient journalClient;
     private final S3BucketProperties s3BucketProperties;
+    private final JournalCredentialService journalCredentialService;
     private final HomeworkExecutionPersistenceService persistenceService;
 
     @Override
@@ -60,6 +64,10 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
             log.error("Permanent S3 error for execution {}. Setting status to FAILED.", event.executionId(), e);
             persistenceService.updateStatusToFailed(event.executionId());
         } catch (Exception e) {
+            if (isInvalidCredentialsError(e)) {
+                log.warn("Invalid credentials when uploading homework for telegramId={}, marking invalid", result.telegramId());
+                journalCredentialService.markCredentialsInvalid(result.telegramId());
+            }
             log.error("Failed to process journal upload for execution {}. Setting status to FAILED.", event.executionId(), e);
             persistenceService.updateStatusToFailed(event.executionId());
         }
@@ -70,7 +78,17 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
         persistenceService.updateStatusToFailed(executionId);
     }
 
-    private void processJournalUpload(@NonNull HomeworkExecution execution) {
+    private static boolean isInvalidCredentialsError(Exception e) {
+        if (e instanceof JournalCredentialsInvalidException) {
+            return true;
+        }
+        if (e instanceof HttpClientErrorException.UnprocessableContent uce) {
+            return uce.getResponseBodyAsString().contains("Неверный логин или пароль");
+        }
+        return false;
+    }
+
+    private void processJournalUpload(@NonNull HomeworkExecution execution) throws IOException {
         if (execution.getResultText() != null && !execution.getResultText().isBlank()) {
             journalClient.uploadHomeworkText(execution.getHomeworkId(), execution.getResultText());
             log.info("Text result for homework {} submitted to journal", execution.getHomeworkId());
@@ -82,16 +100,19 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
                 .key(execution.getResultS3Key())
                 .build();
 
-        ResponseBytes<GetObjectResponse> responseBytes = s3Client.getObjectAsBytes(getObjectRequest);
-        byte[] content = responseBytes.asByteArray();
-        long fileSize = content.length;
-
         String s3Key = execution.getResultS3Key();
         int uuidStart = s3Key.indexOf('-') + 1;
         String filename = s3Key.substring(uuidStart + 36 + 1);
 
-        journalClient.uploadHomework(execution.getHomeworkId(), new ByteArrayInputStream(content), fileSize, filename);
-        log.info("File for homework {} successfully streamed to journal: filename={}, size={} bytes",
-                execution.getHomeworkId(), filename, fileSize);
+        try (ResponseInputStream<GetObjectResponse> s3Stream = s3Client.getObject(getObjectRequest)) {
+            Long fileSize = s3Stream.response().contentLength();
+            if (fileSize == null) {
+                throw new IllegalStateException("Missing content length for S3 key=" + execution.getResultS3Key());
+            }
+
+            journalClient.uploadHomework(execution.getHomeworkId(), s3Stream, fileSize, filename);
+            log.info("File for homework {} successfully streamed to journal: filename={}, size={} bytes",
+                    execution.getHomeworkId(), filename, fileSize);
+        }
     }
 }

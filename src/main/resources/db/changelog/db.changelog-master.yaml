@@ -29,3 +29,5 @@ databaseChangeLog:
       file: db/changelog/master/changeset/013-homework-execution-retry-count.yaml
   - include:
       file: db/changelog/master/changeset/014-indexes.yaml
+  - include:
+      file: db/changelog/master/changeset/015-autohomework-credentials-invalid.yaml

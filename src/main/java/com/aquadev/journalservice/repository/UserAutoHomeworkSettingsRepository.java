@@ -17,6 +17,6 @@ public interface UserAutoHomeworkSettingsRepository extends JpaRepository<UserAu
            "JOIN FETCH u.journalUser ju " +
            "LEFT JOIN FETCH ju.journalGroups " +
            "LEFT JOIN FETCH s.specIds " +
-           "WHERE s.enabled = true")
+            "WHERE s.enabled = true AND ju.credentialsInvalid = false")
     List<UserAutoHomeworkSettings> findAllEnabledWithUserData();
 }

@@ -15,7 +15,7 @@ public enum JournalHomeworkStatus {
     CHECKED(1, "Проверено"),
     IN_PROGRESS(2, "На проверке"),
     NOT_COMPLETED(3, "Не выполнено"),
-    CHECKED_FINAL(4, "Проверено"),
+    CHECKED_FINAL(4, "Общее количество ДЗ"),
     DELETED_BY_TEACHER(5, "ДЗ удалено преподавателем"),
     UNKNOWN(-1, "Неизвестно");
 

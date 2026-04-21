@@ -17,5 +17,9 @@ public interface UserMapper {
     User toEntity(CreateUserRequest request);
 
     @Mapping(target = "journalUsername", source = "journalCredential.username")
+    @Mapping(target = "fullName",
+            expression = "java(user.getJournalUser() != null ? user.getJournalUser().getFullName() : null)")
+    @Mapping(target = "credentialsInvalid",
+            expression = "java(user.getJournalUser() != null && user.getJournalUser().isCredentialsInvalid())")
     UserResponse toResponse(User user);
 }

@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByTelegramId(Long telegramId);
-
+    
     @Query("select u from User u join fetch u.journalUser ju join fetch ju.journalGroups where u.telegramId = :telegramId")
     Optional<User> findByTelegramIdWithGroups(@Param("telegramId") Long telegramId);
 
@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<Long> findJournalUserIdByTelegramId(@Param("telegramId") Long telegramId);
 
     boolean existsByTelegramId(Long telegramId);
+
+    boolean existsByTelegramIdAndJournalUserCredentialsInvalidTrue(Long telegramId);
 }
