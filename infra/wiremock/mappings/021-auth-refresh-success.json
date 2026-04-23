@@ -9,6 +9,9 @@
     "headers": {
       "Content-Type": "application/json; charset=utf-8"
     },
-    "bodyFileName": "auth-refresh-success.json"
+    "transformers": [
+      "response-template"
+    ],
+    "bodyFileName": "auth-refresh-success.json.hbs"
   }
 }

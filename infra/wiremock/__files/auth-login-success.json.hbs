@@ -1,0 +1,22 @@
+{{#assign 'username'}}{{jsonPath request.body '$.username'}}{{/assign}}
+{{#assign 'digits'}}{{replace (base64 username) '[^0-9]+' ''}}{{/assign}}
+{{#assign 'numSuffix'}}{{#if digits}}{{digits}}{{else}}1{{/if}}{{/assign}}
+{{#assign 'studentId'}}{{math numSuffix '+' 40000}}{{/assign}}
+{{#assign 'jwtPayload'}}{"userId": {{studentId}} }{{/assign}}
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{{base64 jwtPayload}}.bW9jaw~{{username}}",
+  "refresh_token": "mock-refresh-{{username}}",
+  "expires_in_refresh": 1776623302,
+  "expires_in_access": 1776623302,
+  "user_type": 1,
+  "city_data": {
+    "id_city": 116,
+    "prefix": "sham",
+    "translate_key": "SHAMBALA",
+    "timezone_name": "Europe/Moscow",
+    "country_code": "RU/RUS",
+    "market_status": 1,
+    "name": "Шамбала"
+  },
+  "user_role": "student"
+}

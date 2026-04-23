@@ -1,22 +1,26 @@
+{{regexExtract request.headers.Authorization 'Bearer [^.]+\.[^.]+\.bW9jaw~(.+)' 'username'}}
+{{#assign 'digits'}}{{replace (base64 username) '[^0-9]+' ''}}{{/assign}}
+{{#assign 'numSuffix'}}{{#if digits}}{{digits}}{{else}}1{{/if}}{{/assign}}
+{{#assign 'studentId'}}{{math numSuffix '+' 40000}}{{/assign}}
 {
   "groups": [
     {
       "group_status": 0,
       "is_primary": true,
       "id": 2651,
-      "name": "9/3-РПО-23/4-Ш"
+      "name": "MOCK-{{upper username}}-GRP"
     }
   ],
   "manual_link": null,
-  "student_id": 40274,
+  "student_id": {{studentId}},
   "current_group_id": 2651,
-  "full_name": "Ворончихин Иван Романович",
+  "full_name": "Тестовый Пользователь {{username}}",
   "achieves_count": 9,
   "stream_id": 123,
-  "stream_name": "Колледж Осень 2023",
-  "group_name": "9/3-РПО-23/4-Ш",
+  "stream_name": "Mock Stream ({{username}})",
+  "group_name": "MOCK-{{upper username}}-GRP",
   "level": 7,
-  "photo": "https://fs.top-academy.ru/api/v1/files/hLyVqzabnDyXaHEsW3_l_6U9I_MNtIwu",
+  "photo": "https://fs.top-academy.ru/api/v1/files/mock-{{username}}-photo",
   "gaming_points": [
     {
       "new_gaming_point_types__id": 1,
@@ -34,7 +38,7 @@
     "is_vacancy": false,
     "is_signal": true,
     "is_promo": false,
-    "is_test": false,
+    "is_test": true,
     "is_email_verified": true,
     "is_quizzes_expired": false,
     "is_debtor": false,
@@ -52,10 +56,10 @@
     "is_academy_branch": true
   },
   "current_group_status": 0,
-  "birthday": "2007-07-12",
-  "age": 18,
-  "last_date_visit": "2026-04-19 15:05:51",
-  "registration_date": "2023-07-11 00:00:00",
+  "birthday": "2000-01-01",
+  "age": 25,
+  "last_date_visit": "{{now format='yyyy-MM-dd HH:mm:ss'}}",
+  "registration_date": "2023-09-01 00:00:00",
   "gender": 0,
   "study_form_short_name": "COLL"
 }

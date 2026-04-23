@@ -5,7 +5,7 @@
     "urlPattern": "/api/v2/homework/operations/list.*(spec_id\\[\\]=1281|spec_id%5B%5D=1281).*",
     "headers": {
       "Authorization": {
-        "equalTo": "Bearer mock-access-token"
+        "matches": "Bearer eyJ.+"
       }
     }
   },

@@ -5,7 +5,7 @@
     "urlPath": "/api/v2/progress/operations/student-visits",
     "headers": {
       "Authorization": {
-        "equalTo": "Bearer mock-access-token"
+        "matches": "Bearer eyJ.+"
       }
     }
   },

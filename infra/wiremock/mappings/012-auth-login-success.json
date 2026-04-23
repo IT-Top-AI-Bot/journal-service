@@ -9,6 +9,9 @@
     "headers": {
       "Content-Type": "application/json; charset=utf-8"
     },
-    "bodyFileName": "auth-login-success.json"
+    "transformers": [
+      "response-template"
+    ],
+    "bodyFileName": "auth-login-success.json.hbs"
   }
 }

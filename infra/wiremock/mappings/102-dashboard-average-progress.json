@@ -5,7 +5,7 @@
     "urlPath": "/api/v2/dashboard/chart/average-progress",
     "headers": {
       "Authorization": {
-        "equalTo": "Bearer mock-access-token"
+        "matches": "Bearer eyJ.+"
       }
     }
   },

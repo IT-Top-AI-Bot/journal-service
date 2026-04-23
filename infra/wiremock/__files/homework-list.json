@@ -10,7 +10,7 @@
     "creation_time": "2026-04-14",
     "overdue_time": "2026-04-25",
     "filename": null,
-    "file_path": "https://fs.top-academy.ru/api/v1/files/T8xDR-pFxCxrmk-KTyvfZ5d7Ud2ze1iB",
+    "file_path": "http://localhost:8090/mock-files/random-url",
     "comment": "Загрузить отчёт",
     "name_spec": "Внедрение и поддержка компьютерных систем (ИС)",
     "status": 1,
@@ -18,7 +18,7 @@
     "homework_stud": {
       "id": 3385732,
       "filename": null,
-      "file_path": "https://fs.top-academy.ru/api/v1/files/A4iMw35yGoHh_hebU8C0Sax4BUNGCPfZ",
+      "file_path": "http://localhost:8090/mock-files/random-url",
       "tmp_file": null,
       "mark": 5,
       "creation_time": "2026-04-14",
