@@ -1,0 +1,19 @@
+{
+  "priority": 100,
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/api/v2/(settings|homework|dashboard|schedule|progress|count)/.*"
+  },
+  "response": {
+    "status": 401,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "jsonBody": {
+      "name": "Unauthorized",
+      "message": "Your request was made with invalid credentials.",
+      "code": 0,
+      "status": 401
+    }
+  }
+}

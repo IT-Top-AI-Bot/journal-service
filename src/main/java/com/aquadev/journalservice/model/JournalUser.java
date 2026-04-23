@@ -55,4 +55,7 @@ public class JournalUser {
 
     @Column(nullable = false)
     private Boolean gender;
+
+    @Column(name = "credentials_invalid", nullable = false)
+    private boolean credentialsInvalid;
 }

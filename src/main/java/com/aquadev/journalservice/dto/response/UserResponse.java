@@ -7,6 +7,8 @@ public record UserResponse(
         UUID id,
         Long telegramId,
         String journalUsername,
+        String fullName,
+        boolean credentialsInvalid,
         Instant createdAt,
         Instant updatedAt
 ) {

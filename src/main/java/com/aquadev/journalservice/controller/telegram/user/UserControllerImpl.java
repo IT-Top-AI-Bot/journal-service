@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -37,6 +38,14 @@ public class UserControllerImpl implements UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = userService.createUser(request);
+        return userMapper.toResponse(user);
+    }
+
+    @Override
+    @PutMapping("/me/credentials")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse updateCredentials(@Valid @RequestBody CreateUserRequest request) {
+        User user = userService.updateCredentials(request);
         return userMapper.toResponse(user);
     }
 }

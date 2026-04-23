@@ -1,0 +1,19 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v2/settings/group-specs",
+    "headers": {
+      "Authorization": {
+        "matches": "Bearer eyJ.+"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "bodyFileName": "group-specs.json"
+  }
+}

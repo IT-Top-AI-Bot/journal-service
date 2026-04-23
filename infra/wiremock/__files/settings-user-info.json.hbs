@@ -1,0 +1,65 @@
+{{regexExtract request.headers.Authorization 'Bearer [^.]+\.[^.]+\.bW9jaw~(.+)' 'username'}}
+{{#assign 'digits'}}{{replace (base64 username) '[^0-9]+' ''}}{{/assign}}
+{{#assign 'numSuffix'}}{{#if digits}}{{digits}}{{else}}1{{/if}}{{/assign}}
+{{#assign 'studentId'}}{{math numSuffix '+' 40000}}{{/assign}}
+{
+  "groups": [
+    {
+      "group_status": 0,
+      "is_primary": true,
+      "id": 2651,
+      "name": "MOCK-{{upper username}}-GRP"
+    }
+  ],
+  "manual_link": null,
+  "student_id": {{studentId}},
+  "current_group_id": 2651,
+  "full_name": "Тестовый Пользователь {{username}}",
+  "achieves_count": 9,
+  "stream_id": 123,
+  "stream_name": "Mock Stream ({{username}})",
+  "group_name": "MOCK-{{upper username}}-GRP",
+  "level": 7,
+  "photo": "https://fs.top-academy.ru/api/v1/files/mock-{{username}}-photo",
+  "gaming_points": [
+    {
+      "new_gaming_point_types__id": 1,
+      "points": 2074
+    },
+    {
+      "new_gaming_point_types__id": 2,
+      "points": 529
+    }
+  ],
+  "spent_gaming_points": [],
+  "visibility": {
+    "is_design": false,
+    "is_video_courses": false,
+    "is_vacancy": false,
+    "is_signal": true,
+    "is_promo": false,
+    "is_test": true,
+    "is_email_verified": true,
+    "is_quizzes_expired": false,
+    "is_debtor": false,
+    "is_phone_verified": true,
+    "is_only_profile": false,
+    "is_referral_program": false,
+    "is_dz_group_issue": true,
+    "is_birthday": false,
+    "is_school": false,
+    "is_news_popup": false,
+    "is_school_branch": false,
+    "is_college_branch": false,
+    "is_higher_education_branch": false,
+    "is_russian_branch": true,
+    "is_academy_branch": true
+  },
+  "current_group_status": 0,
+  "birthday": "2000-01-01",
+  "age": 25,
+  "last_date_visit": "{{now format='yyyy-MM-dd HH:mm:ss'}}",
+  "registration_date": "2023-09-01 00:00:00",
+  "gender": 0,
+  "study_form_short_name": "COLL"
+}

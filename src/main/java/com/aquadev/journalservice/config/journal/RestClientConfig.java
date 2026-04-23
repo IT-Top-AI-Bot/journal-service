@@ -1,5 +1,6 @@
 package com.aquadev.journalservice.config.journal;
 
+import com.aquadev.journalservice.repository.UserRepository;
 import com.aquadev.journalservice.service.journal.token.JournalTokenManager;
 import com.aquadev.journalservice.service.journal.token.JournalUserIdResolver;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class RestClientConfig {
     private final JournalApiProperties journalApiProperties;
     private final ObjectProvider<JournalTokenManager> tokenManagerProvider;
     private final ObjectProvider<JournalUserIdResolver> journalUserIdResolverProvider;
+    private final ObjectProvider<UserRepository> userRepositoryProvider;
 
     private static HttpMessageConverter<Object> snakeCaseJsonConverter() {
         SimpleModule journalModule = new SimpleModule()
@@ -94,6 +96,6 @@ public class RestClientConfig {
 
     @Bean
     public ClientHttpRequestInterceptor journalAuthInterceptor() {
-        return new JournalAuthInterceptor(tokenManagerProvider, journalUserIdResolverProvider);
+        return new JournalAuthInterceptor(tokenManagerProvider, journalUserIdResolverProvider, userRepositoryProvider);
     }
 }

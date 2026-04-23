@@ -23,20 +23,38 @@ extensions:
 
 processors:
   batch:
+    timeout: 5s
+    send_batch_size: 512
+    send_batch_max_size: 1024
 
 exporters:
   otlphttp/traces:
     endpoint: http://tempo:4318
     tls:
       insecure: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 120s
   otlphttp/metrics:
     endpoint: http://prometheus:9090/api/v1/otlp
     tls:
       insecure: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 120s
   otlphttp/logs:
     endpoint: http://loki:3100/otlp
     tls:
       insecure: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 120s
   otlp/profiles:
     endpoint: http://pyroscope:4040
     tls:

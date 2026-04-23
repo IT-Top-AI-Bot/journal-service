@@ -1,8 +1,11 @@
 package com.aquadev.journalservice.config.journal;
 
+import com.aquadev.journalservice.exception.domain.journal.JournalAuthenticationException;
+import com.aquadev.journalservice.repository.UserRepository;
 import com.aquadev.journalservice.service.journal.token.JournalTokenManager;
 import com.aquadev.journalservice.service.journal.token.JournalUserIdResolver;
 import com.aquadev.journalservice.util.SecurityUtil;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -16,28 +19,34 @@ public class JournalAuthInterceptor implements ClientHttpRequestInterceptor {
 
     private static final String RETRY_HEADER = "X-Journal-Retry";
 
+    private final ObjectProvider<UserRepository> userRepositoryProvider;
     private final ObjectProvider<JournalTokenManager> tokenManagerProvider;
     private final ObjectProvider<JournalUserIdResolver> journalUserIdResolverProvider;
 
     public JournalAuthInterceptor(
             ObjectProvider<JournalTokenManager> tokenManagerProvider,
-            ObjectProvider<JournalUserIdResolver> journalUserIdResolverProvider
+            ObjectProvider<JournalUserIdResolver> journalUserIdResolverProvider,
+            ObjectProvider<UserRepository> userRepositoryProvider
     ) {
         this.tokenManagerProvider = tokenManagerProvider;
         this.journalUserIdResolverProvider = journalUserIdResolverProvider;
+        this.userRepositoryProvider = userRepositoryProvider;
     }
 
     @Override
-    public ClientHttpResponse intercept(
+    public @NonNull ClientHttpResponse intercept(
             HttpRequest request,
-            byte[] body,
-            ClientHttpRequestExecution execution
+            byte @NonNull [] body,
+            @NonNull ClientHttpRequestExecution execution
     ) throws IOException {
         if (isAuthEndpoint(request.getURI())) {
             return execution.execute(request, body);
         }
 
         long telegramUserId = SecurityUtil.getCurrentTelegramUserId();
+        if (userRepositoryProvider.getObject().existsByTelegramIdAndJournalUserCredentialsInvalidTrue(telegramUserId)) {
+            throw JournalAuthenticationException.invalidCredentials();
+        }
         long journalUserId = journalUserIdResolverProvider.getObject().resolve(telegramUserId);
         String accessToken = tokenManagerProvider.getObject().getValidAccessToken(journalUserId);
         request.getHeaders().setBearerAuth(accessToken);

@@ -10,4 +10,6 @@ public interface UserService {
     User getUserByTelegramId(Long telegramId);
 
     User createUser(CreateUserRequest request);
+
+    User updateCredentials(CreateUserRequest request);
 }

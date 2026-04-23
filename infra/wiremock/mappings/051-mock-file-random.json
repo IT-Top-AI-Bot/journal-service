@@ -1,0 +1,31 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/mock-files/random-url"
+  },
+  "response": {
+    "status": 302,
+    "headers": {
+      "Location": "{{pickRandom parameters.fileUrls}}"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "transformerParameters": {
+      "fileUrls": [
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/57.2.PNG",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/Bash%20%D0%B4%D0%BB%D1%8F%20%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B8%20%D1%81%D0%B2%D1%8F%D0%B7%D0%B8%20%D1%81%20%D0%BD%D0%B5%D1%81%D0%BA%D0%BE%D0%BB%D1%8C%D0%BA%D0%B8%D0%BC%D0%B8%20%D1%83%D0%B7%D0%BB%D0%B0%D0%BC%D0%B8.docx",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%90%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5%20%D0%BE%D0%B1%D0%BD%D0%BE%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%BE%D0%B1%D0%B5%D1%81%D0%BF%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D1%8F.docx",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%91%D0%90%D0%A1%D0%9A%D0%95%D0%A2%D0%91%D0%9E%D0%9B.%D0%9B%D0%95%D0%93%D0%95%D0%9D%D0%94%D0%AB%20NBA..doc",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%91%D0%BE%D0%BD%D1%83%D1%81-%D0%B4.%D0%B7.%20TOP.pdf",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%92%D0%9E%D0%94%D0%9D%D0%9E%D0%95%20%D0%9F%D0%9E%D0%9B%D0%9E.%D0%98%D0%A1%D0%A2%D0%9E%D0%A0%D0%98%D0%AF%20%D0%92%D0%9E%D0%97%D0%9D%D0%98%D0%9A%D0%9D%D0%9E%D0%92%D0%95%D0%9D%D0%98%D0%AF.doc",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%94%D0%97_11.docx",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%94%D0%97_12.docx",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%94%D0%97_13.docx",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%94%D0%B7_9%20%281%29.docx",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0%20%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D0%B8%20%D0%B2%D0%B2%D0%BE%D0%B4%D0%B8%D0%BC%D1%8B%D1%85%20%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D0%B5%D0%BC%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20.docx",
+        "https://s3.actimate.ru/homeworks-journal/test_dz_itop/%D0%B4%D0%B7%20%281%29.docx"
+      ]
+    }
+  }
+}

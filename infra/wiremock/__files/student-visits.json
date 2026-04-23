@@ -1,0 +1,32 @@
+[
+  {
+    "date_visit": "2026-04-17",
+    "lesson_number": 2,
+    "status_was": 0,
+    "spec_id": 1288,
+    "teacher_name": "Власов Даниил Сергеевич",
+    "spec_name": "Обеспечение качества функционирования компьютерных систем  (ИС)",
+    "lesson_theme": "Настройка политики безопасности",
+    "control_work_mark": null,
+    "home_work_mark": null,
+    "lab_work_mark": null,
+    "class_work_mark": null,
+    "practical_work_mark": null,
+    "final_work_mark": null
+  },
+  {
+    "date_visit": "2026-04-16",
+    "lesson_number": null,
+    "status_was": null,
+    "spec_id": 1285,
+    "teacher_name": "Таштанов Вейсал Алишерович",
+    "spec_name": "Инструментальные средства разработки программного обеспечения (ИС)",
+    "lesson_theme": "Итоговая оценка",
+    "control_work_mark": null,
+    "home_work_mark": null,
+    "lab_work_mark": null,
+    "class_work_mark": null,
+    "practical_work_mark": null,
+    "final_work_mark": 4
+  }
+]
