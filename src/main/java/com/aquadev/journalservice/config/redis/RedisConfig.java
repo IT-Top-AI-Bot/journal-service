@@ -25,6 +25,9 @@ public class RedisConfig {
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
+    @Value("${spring.data.redis.database:0}")
+    private int redisDatabase;
+
     @Bean(destroyMethod = "shutdown")
     public ClientResources clientResources() {
         return ClientResources.builder().build();
@@ -33,6 +36,7 @@ public class RedisConfig {
     @Bean
     public LettuceConnectionFactory lettuceConnectionFactory(ClientResources clientResources) {
         RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration(redisHost, redisPort);
+        serverConfig.setDatabase(redisDatabase);
         if (redisPassword != null && !redisPassword.isBlank()) {
             serverConfig.setPassword(redisPassword);
         }
