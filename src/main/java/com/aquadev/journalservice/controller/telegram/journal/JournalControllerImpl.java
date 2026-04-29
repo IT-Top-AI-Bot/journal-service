@@ -67,6 +67,13 @@ public class JournalControllerImpl implements JournalController {
     }
 
     @Override
+    @GetMapping("/schedule/range")
+    public List<JournalScheduleResponse> getScheduleByDateRange(@RequestParam LocalDate dateStart,
+                                                                @RequestParam LocalDate dateEnd) {
+        return journalService.getScheduleByDateRange(dateStart, dateEnd);
+    }
+
+    @Override
     @GetMapping("/group-specs")
     public List<JournalSpecResponse> getGroupSpecs() {
         return journalService.getGroupSpecs();

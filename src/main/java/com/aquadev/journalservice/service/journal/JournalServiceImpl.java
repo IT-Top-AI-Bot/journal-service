@@ -87,6 +87,11 @@ public class JournalServiceImpl implements JournalService {
     }
 
     @Override
+    public List<JournalScheduleResponse> getScheduleByDateRange(LocalDate dateStart, LocalDate dateEnd) {
+        return journalReferenceClient.getScheduleByDateRange(dateStart, dateEnd);
+    }
+
+    @Override
     @Cacheable(value = "groupSpecs", cacheManager = "dailyCache", key = "@userGroupServiceImpl.getCurrentGroupId()")
     public List<JournalSpecResponse> getGroupSpecs() {
         return journalReferenceClient.getGroupSpecs();

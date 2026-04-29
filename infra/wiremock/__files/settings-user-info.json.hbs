@@ -1,7 +1,6 @@
-{{regexExtract request.headers.Authorization 'Bearer [^.]+\.[^.]+\.bW9jaw~(.+)' 'username'}}
-{{#assign 'digits'}}{{replace (base64 username) '[^0-9]+' ''}}{{/assign}}
-{{#assign 'numSuffix'}}{{#if digits}}{{digits}}{{else}}1{{/if}}{{/assign}}
-{{#assign 'studentId'}}{{math numSuffix '+' 40000}}{{/assign}}
+{{regexExtract request.headers.Authorization 'Bearer [^.]+\.[^.]+\.bW9jaw~([0-9]+)~(.+)' 'parsed'}}
+{{#assign 'studentId'}}{{parsed.0}}{{/assign}}
+{{#assign 'username'}}{{parsed.1}}{{/assign}}
 {
   "groups": [
     {

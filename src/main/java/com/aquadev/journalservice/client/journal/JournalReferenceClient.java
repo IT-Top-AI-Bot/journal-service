@@ -15,6 +15,11 @@ public interface JournalReferenceClient {
     @GetExchange("/schedule/operations/get-month")
     List<JournalScheduleResponse> getScheduleByDate(@RequestParam("date-filter") LocalDate date);
 
+    @GetExchange("/schedule/operations/get-by-date-range")
+    List<JournalScheduleResponse> getScheduleByDateRange(
+            @RequestParam("date_start") LocalDate dateStart,
+            @RequestParam("date_end") LocalDate dateEnd);
+
     @GetExchange("/settings/group-specs")
     List<JournalSpecResponse> getGroupSpecs();
 }

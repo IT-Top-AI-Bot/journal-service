@@ -1,11 +1,10 @@
-{{regexExtract (jsonPath request.body '$.refresh_token') 'mock-refresh-(.+)' 'username'}}
-{{#assign 'digits'}}{{replace (base64 username) '[^0-9]+' ''}}{{/assign}}
-{{#assign 'numSuffix'}}{{#if digits}}{{digits}}{{else}}1{{/if}}{{/assign}}
-{{#assign 'studentId'}}{{math numSuffix '+' 40000}}{{/assign}}
+{{regexExtract (jsonPath request.body '$.refresh_token') 'mock-refresh-([0-9]+)~(.+)' 'parsed'}}
+{{#assign 'studentId'}}{{parsed.0}}{{/assign}}
+{{#assign 'username'}}{{parsed.1}}{{/assign}}
 {{#assign 'jwtPayload'}}{"userId": {{studentId}} }{{/assign}}
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{{base64 jwtPayload}}.bW9jaw~{{username}}",
-  "refresh_token": "mock-refresh-{{username}}",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{{base64 jwtPayload}}.bW9jaw~{{studentId}}~{{username}}",
+  "refresh_token": "mock-refresh-{{studentId}}~{{username}}",
   "expires_in_refresh": 1776624306,
   "expires_in_access": 1776624306,
   "user_type": 1,

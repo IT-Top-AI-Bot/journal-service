@@ -25,5 +25,7 @@ public interface JournalService {
 
     List<JournalScheduleResponse> getScheduleByDate(LocalDate date);
 
+    List<JournalScheduleResponse> getScheduleByDateRange(LocalDate dateStart, LocalDate dateEnd);
+
     List<JournalSpecResponse> getGroupSpecs();
 }

@@ -3,7 +3,7 @@ spring:
     name: journal-service
 
   config:
-    import: "optional:configserver:http://${CONFIG_SERVER_USERNAME}:${CONFIG_SERVER_PASSWORD}@${CONFIG_SERVER_HOST:config-server}:${CONFIG_SERVER_PORT}"
+    import: "optional:configserver:http://${CONFIG_SERVER_USERNAME}:${CONFIG_SERVER_PASSWORD}@${CONFIG_SERVER_HOST:config-server}:${CONFIG_SERVER_PORT:8888}"
 
   cloud:
     config:

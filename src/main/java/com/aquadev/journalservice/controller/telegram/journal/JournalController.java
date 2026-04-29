@@ -42,6 +42,10 @@ public interface JournalController {
     @GetMapping("/schedule/{date}")
     List<JournalScheduleResponse> getScheduleByDate(@PathVariable LocalDate date);
 
+    @GetMapping("/schedule/range")
+    List<JournalScheduleResponse> getScheduleByDateRange(@RequestParam LocalDate dateStart,
+                                                         @RequestParam LocalDate dateEnd);
+
     @GetMapping("/group-specs")
     List<JournalSpecResponse> getGroupSpecs();
 }
