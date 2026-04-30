@@ -98,4 +98,5 @@ public class RestClientConfig {
     public ClientHttpRequestInterceptor journalAuthInterceptor() {
         return new JournalAuthInterceptor(tokenManagerProvider, journalUserIdResolverProvider, userRepositoryProvider);
     }
+
 }

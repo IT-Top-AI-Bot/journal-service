@@ -63,8 +63,13 @@ public class HomeworkExecutionResultServiceImpl implements HomeworkExecutionResu
             log.error("Permanent S3 error for execution {}. Setting status to FAILED.", event.executionId(), e);
             persistenceService.updateStatusToFailed(event.executionId());
         } catch (JournalAuthenticationException e) {
-            log.warn("Invalid credentials when uploading homework for telegramId={}, marking invalid", result.telegramId());
-            journalCredentialService.markCredentialsInvalid(result.telegramId());
+            if (e.getReason() == JournalAuthenticationException.Reason.INVALID_CREDENTIALS) {
+                log.warn("Invalid credentials when uploading homework for telegramId={}, marking invalid", result.telegramId());
+                journalCredentialService.markCredentialsInvalid(result.telegramId());
+            } else {
+                log.warn("Journal auth error when uploading homework for telegramId={} (reason={})",
+                        result.telegramId(), e.getReason());
+            }
             log.error("Failed to process journal upload for execution {}. Setting status to FAILED.", event.executionId(), e);
             persistenceService.updateStatusToFailed(event.executionId());
         } catch (Exception e) {

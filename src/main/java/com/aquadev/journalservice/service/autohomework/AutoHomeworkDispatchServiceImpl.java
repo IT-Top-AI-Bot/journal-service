@@ -64,9 +64,13 @@ public class AutoHomeworkDispatchServiceImpl implements AutoHomeworkDispatchServ
         } catch (HttpClientErrorException.TooManyRequests _) {
             log.warn("Rate limit hit for user telegramId={}, will retry on next check", telegramId);
         } catch (JournalAuthenticationException exception) {
-            log.warn("Invalid journal credentials for telegramId={}, marking invalid: {}",
-                    telegramId, exception.getClass().getSimpleName());
-            journalCredentialService.markCredentialsInvalid(telegramId);
+            if (exception.getReason() == JournalAuthenticationException.Reason.INVALID_CREDENTIALS) {
+                log.warn("Invalid journal credentials for telegramId={}, marking invalid", telegramId);
+                journalCredentialService.markCredentialsInvalid(telegramId);
+            } else {
+                log.warn("Journal auth error for telegramId={} (reason={}), skipping dispatch",
+                        telegramId, exception.getReason());
+            }
         } catch (Exception exception) {
             log.error("Error in auto homework check for user telegramId={}: {}",
                     telegramId, exception.getMessage(), exception);
