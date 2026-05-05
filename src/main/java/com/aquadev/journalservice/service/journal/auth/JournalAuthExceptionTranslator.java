@@ -37,7 +37,7 @@ public class JournalAuthExceptionTranslator {
     }
 
     public RuntimeException translateLoginException(HttpClientErrorException exception) {
-        if (isInvalidCredentials(exception) || isAuthStatus(exception.getStatusCode().value())) {
+        if (isInvalidCredentials(exception)) {
             return JournalAuthenticationException.invalidCredentials();
         }
         return exception;
