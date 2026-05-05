@@ -153,7 +153,9 @@ public class JournalTokenManager {
         try {
             token = journalAuthService.login(credential.getUsername(), credential.getPassword());
         } catch (JournalAuthenticationException ex) {
-            markReauthRequired(journalUserId);
+            if (requiresCredentialUpdate(ex)) {
+                markReauthRequired(journalUserId);
+            }
             throw ex;
         }
 
@@ -166,6 +168,11 @@ public class JournalTokenManager {
             token.setReauthRequired(true);
             repo.save(token);
         });
+    }
+
+    private boolean requiresCredentialUpdate(JournalAuthenticationException ex) {
+        return ex.getReason() == JournalAuthenticationException.Reason.INVALID_CREDENTIALS
+                || ex.getReason() == JournalAuthenticationException.Reason.MISSING_CREDENTIALS;
     }
 
     private void cacheAccess(long journalUserId, String access, Instant accessExp) {
