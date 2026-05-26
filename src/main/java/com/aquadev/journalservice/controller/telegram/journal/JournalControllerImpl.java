@@ -1,25 +1,13 @@
 package com.aquadev.journalservice.controller.telegram.journal;
 
 import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
-import com.aquadev.journalservice.dto.response.HomeworkExecutionResponse;
-import com.aquadev.journalservice.dto.response.JournalCountHomeworkResponse;
-import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
-import com.aquadev.journalservice.dto.response.JournalScheduleResponse;
-import com.aquadev.journalservice.dto.response.JournalSpecResponse;
-import com.aquadev.journalservice.dto.response.JournalUserResponse;
+import com.aquadev.journalservice.dto.response.*;
 import com.aquadev.journalservice.mapper.HomeworkExecutionMapper;
 import com.aquadev.journalservice.service.journal.JournalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -77,5 +65,11 @@ public class JournalControllerImpl implements JournalController {
     @GetMapping("/group-specs")
     public List<JournalSpecResponse> getGroupSpecs() {
         return journalService.getGroupSpecs();
+    }
+
+    @Override
+    @GetMapping("/future-exams")
+    public List<FutureExamResponse> getFutureExams() {
+        return journalService.getFutureExams();
     }
 }

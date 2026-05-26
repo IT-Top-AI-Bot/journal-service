@@ -4,12 +4,7 @@ import com.aquadev.journalservice.client.journal.JournalHomeworkQueryClient;
 import com.aquadev.journalservice.client.journal.JournalReferenceClient;
 import com.aquadev.journalservice.client.journal.JournalUserInfoClient;
 import com.aquadev.journalservice.dto.request.HomeworkExecutionRequest;
-import com.aquadev.journalservice.dto.response.JournalCountHomeworkResponse;
-import com.aquadev.journalservice.dto.response.JournalHomeworkResponse;
-import com.aquadev.journalservice.dto.response.JournalHomeworkStatus;
-import com.aquadev.journalservice.dto.response.JournalScheduleResponse;
-import com.aquadev.journalservice.dto.response.JournalSpecResponse;
-import com.aquadev.journalservice.dto.response.JournalUserResponse;
+import com.aquadev.journalservice.dto.response.*;
 import com.aquadev.journalservice.exception.domain.user.UserNotFoundException;
 import com.aquadev.journalservice.mapper.HomeworkExecutionMapper;
 import com.aquadev.journalservice.model.HomeworkExecution;
@@ -95,5 +90,10 @@ public class JournalServiceImpl implements JournalService {
     @Cacheable(value = "groupSpecs", cacheManager = "dailyCache", key = "@userGroupServiceImpl.getCurrentGroupId()")
     public List<JournalSpecResponse> getGroupSpecs() {
         return journalReferenceClient.getGroupSpecs();
+    }
+
+    @Override
+    public List<FutureExamResponse> getFutureExams() {
+        return journalReferenceClient.getFutureExams();
     }
 }

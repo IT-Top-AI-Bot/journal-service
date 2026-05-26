@@ -1,5 +1,0 @@
-akhq:
-  connections:
-    local:
-      properties:
-        bootstrap.servers: "kafka:29092"

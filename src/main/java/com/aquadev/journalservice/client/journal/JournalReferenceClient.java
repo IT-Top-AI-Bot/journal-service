@@ -1,5 +1,6 @@
 package com.aquadev.journalservice.client.journal;
 
+import com.aquadev.journalservice.dto.response.FutureExamResponse;
 import com.aquadev.journalservice.dto.response.JournalScheduleResponse;
 import com.aquadev.journalservice.dto.response.JournalSpecResponse;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,4 +23,7 @@ public interface JournalReferenceClient {
 
     @GetExchange("/settings/group-specs")
     List<JournalSpecResponse> getGroupSpecs();
+
+    @GetExchange("/dashboard/info/future-exams")
+    List<FutureExamResponse> getFutureExams();
 }
